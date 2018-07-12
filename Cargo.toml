@@ -1,0 +1,8 @@
+[package]
+name = "mr-cool-nes"
+version = "0.1.0"
+authors = ["nukeop <nukeop@gumblert.tech>"]
+
+[dependencies]
+sdl2 = "0.31.0"
+clap = "2.32.0"
