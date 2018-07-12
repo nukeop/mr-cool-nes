@@ -1,4 +1,4 @@
-struct Registers {
+pub struct Registers {
     a: u8,
     x: u8,
     y: u8,
