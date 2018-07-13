@@ -1,0 +1,24 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+- rust: nightly
+
+cache: cargo
+
+before_deploy:
+  - cargo build --release --target=x86_64-unknown-linux-gnu
+  - mv target/release/nes .
+  - tar czvf nes-x86_64-linux.tar.gz nes
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file:
+    - nes-x86_64-linux.tar.gz
+  on:
+    tags: true
+  skip_cleanup: true
