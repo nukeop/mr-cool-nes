@@ -22,5 +22,6 @@ deploy:
   file:
     - nes-x86_64-linux.tar.gz
   on:
+    branch: master
     tags: true
   skip_cleanup: true
