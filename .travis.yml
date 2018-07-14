@@ -14,7 +14,7 @@ cache: cargo
 before_deploy:
   - cargo build --release --target=x86_64-unknown-linux-gnu
   - mv target/x86_64-unknown-linux-gnu/release/nes .
-  - tar czvf nes-x86_64-linux.tar.gz nes
+  - tar czvf nes-x86_64-linux.tar.gz nes .mrcoolnes
 
 deploy:
   provider: releases
