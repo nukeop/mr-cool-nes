@@ -22,7 +22,7 @@ pub struct Rom {
 }
 
 impl Rom {
-    fn load(path: String) -> Rom {
+    pub fn load(path: &String) -> Rom {
         let mut f = File::open(path).expect("Rom file not found");
         let mut header_buffer = [0;16];
         f.read_exact(&mut header_buffer);
