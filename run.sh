@@ -1,1 +1,1 @@
-RUST_LOG=nes=info,mr_cool_nes=info cargo run
+RUST_LOG=nes=info,mr_cool_nes=info cargo run "$@"

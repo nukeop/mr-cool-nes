@@ -2,6 +2,7 @@ use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 
+#[derive(Debug)]
 pub struct INesHeader {
     magic: [u8; 4],
     prg_rom_size: u8,
@@ -14,7 +15,7 @@ pub struct INesHeader {
     zero: [u8; 5]
 }
 
-
+#[derive(Debug)]
 pub struct Rom {
     header: INesHeader,
     prg_rom: Vec<u8>,
@@ -22,10 +23,10 @@ pub struct Rom {
 }
 
 impl Rom {
-    pub fn load(path: &String) -> Rom {
+    pub fn load(path: &String) -> Result<Rom, io::Error> {
         let mut f = File::open(path).expect("Rom file not found");
         let mut header_buffer = [0;16];
-        f.read_exact(&mut header_buffer);
+        f.read_exact(&mut header_buffer).unwrap();
         let mut header = INesHeader {
             magic: [
                 header_buffer[0],
@@ -43,11 +44,24 @@ impl Rom {
             zero: [0;5]
         };
 
-        Rom {
-            header: header,
-            prg_rom: vec![0u8],
-            chr_rom: vec![0u8]
+        if header.magic != *b"NES\x1a" {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Loaded file is not a NES rom."));
         }
+
+        let prg_size = header.prg_rom_size as usize * 16384;
+        let mut prg_rom = vec![0; prg_size];
+        f.read_exact(&mut prg_rom).unwrap();
+        
+        
+        let chr_size = header.chr_rom_size as usize * 8192;
+        let mut chr_rom = vec![0; chr_size];
+        f.read_exact(&mut chr_rom)?;
+        
+        Ok(Rom {
+            header: header,
+            prg_rom: prg_rom,
+            chr_rom: chr_rom
+        })
 
     }
 }

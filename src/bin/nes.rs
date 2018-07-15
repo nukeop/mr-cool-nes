@@ -20,10 +20,8 @@ fn main() {
 
     info!("Loading a config file from: {}", config_path);
     let config = EmuConfig::from_path(config_path);
-    println!("{}", config.screen_size);
-
     
     info!("Loading a ROM from: {}", rom_path);
+    let rom = rom::Rom::load(rom_path).unwrap();
 
-    //let rom = rom::Rom::load(rom_path);
 }
