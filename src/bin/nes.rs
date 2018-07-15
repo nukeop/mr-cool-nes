@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use mr_cool_nes::init::read_cl_args;
 use mr_cool_nes::emu_config::EmuConfig;
 use mr_cool_nes::core::rom;
+use mr_cool_nes::renderer;
 
 fn main() {
     pretty_env_logger::init();
@@ -24,4 +25,6 @@ fn main() {
     info!("Loading a ROM from: {}", rom_path);
     let rom = rom::Rom::load(rom_path).unwrap();
 
+    let mut renderer = renderer::Renderer::new(config);
+    renderer.start_loop();
 }
