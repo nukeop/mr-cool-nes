@@ -11,6 +11,9 @@ matrix:
 
 cache: cargo
 
+before_install:
+  - sudo apt install libsdl2-dev
+
 before_deploy:
   - cargo build --release --target=x86_64-unknown-linux-gnu
   - mv target/x86_64-unknown-linux-gnu/release/nes .
