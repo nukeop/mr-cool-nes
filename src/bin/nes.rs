@@ -4,8 +4,6 @@ extern crate pretty_env_logger;
 
 extern crate mr_cool_nes;
 
-use std::collections::HashMap;
-
 use mr_cool_nes::init::read_cl_args;
 use mr_cool_nes::emu_config::EmuConfig;
 use mr_cool_nes::core::rom;

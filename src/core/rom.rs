@@ -27,7 +27,7 @@ impl Rom {
         let mut f = File::open(path).expect("Rom file not found");
         let mut header_buffer = [0;16];
         f.read_exact(&mut header_buffer).unwrap();
-        let mut header = INesHeader {
+        let header = INesHeader {
             magic: [
                 header_buffer[0],
                 header_buffer[1],
