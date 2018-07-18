@@ -7,6 +7,8 @@ use sdl2::rect::Rect;
 use sdl2::render;
 use sdl2::surface::Surface;
 use std::path::Path;
+
+use font_map::get_letter;
 use emu_config::EmuConfig;
 
 const SCREEN_WIDTH: u32 = 256;
@@ -28,7 +30,7 @@ impl Renderer {
         let video_subsystem = sdl_context.video().unwrap();
         
         let window = video_subsystem.window(
-            "Mr Cool NES",
+            "Mr. Cool NES",
             SCREEN_WIDTH * (config.screen_size as u32),
             (EMULATOR_FRAME_HEIGHT + SCREEN_HEIGHT) * (config.screen_size as u32)
         )
@@ -60,18 +62,31 @@ impl Renderer {
         return Surface::from_file(path).unwrap();
     }
 
+
+    pub fn draw_text(&mut self, text: &String, x: u32, y: u32) {
+        let creator = self.canvas.texture_creator();
+        let texture = creator.create_texture_from_surface(self.font.as_ref()).unwrap();
+
+        for (i, letter) in text.chars().enumerate() {
+            let rect = get_letter(&letter);
+            self.canvas.copy(
+                &texture,
+                rect,
+                Rect::new((x + (i as u32)*16) as i32, y as i32, 16, 16)
+            );
+        }
+    }
+
+    pub fn draw_title(&mut self) {
+        self.draw_text(&("Mr. Cool NES".to_owned()), 0, 0);
+    }
+
     pub fn start_loop(&mut self) {
         let mut event_pump = self.context.event_pump().unwrap();
         'running: loop {
             self.canvas.clear();
 
-            let creator = self.canvas.texture_creator();
-            let texture = creator.create_texture_from_surface(self.font.as_ref());
-            self.canvas.copy(
-                &texture.unwrap(),
-                Rect::new(16, 32, 16, 16),
-                Rect::new(0, 0, 16, 16)
-            );
+            self.draw_title();
             
             for event in event_pump.poll_iter() {
                 match event {
