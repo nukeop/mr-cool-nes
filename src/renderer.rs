@@ -7,6 +7,7 @@ use sdl2::rect::Rect;
 use sdl2::render;
 use sdl2::surface::Surface;
 use std::path::Path;
+use std::ffi::OsString;
 
 use font_map::get_letter;
 use emu_config::EmuConfig;
@@ -17,6 +18,7 @@ const EMULATOR_FRAME_HEIGHT: u32 = 32;
 
 pub struct Renderer {
     config: EmuConfig,
+    rom_path: String,
     context: sdl2::Sdl,
     canvas: sdl2::render::Canvas<sdl2::video::Window>,
     font: Surface<'static>,
@@ -25,7 +27,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(config: EmuConfig) -> Renderer {
+    pub fn new(config: EmuConfig, rom_path: &String) -> Renderer {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
         
@@ -50,6 +52,7 @@ impl Renderer {
         
         Renderer {
             config: config,
+            rom_path: rom_path.to_owned(),
             context: sdl_context,
             canvas: canvas,
             font: font,
@@ -73,7 +76,7 @@ impl Renderer {
                 &texture,
                 rect,
                 Rect::new((x + (i as u32)*16) as i32, y as i32, 16, 16)
-            );
+            ).unwrap();
         }
     }
 
@@ -82,11 +85,21 @@ impl Renderer {
     }
 
     pub fn start_loop(&mut self) {
+        let rom_name = self.rom_path.to_owned();
+        let rom_name_path = Path::new(&rom_name);
+        let rom_filename = rom_name_path
+            .file_name()
+            .expect("Couldn't extract filename from rom path")
+            .to_str()
+            .expect("Couldn't convert filename to string")
+            .to_owned();
+        
         let mut event_pump = self.context.event_pump().unwrap();
         'running: loop {
             self.canvas.clear();
 
             self.draw_title();
+            self.draw_text(&("ROM: ".to_owned() + &rom_filename), 0, 16);
             
             for event in event_pump.poll_iter() {
                 match event {
