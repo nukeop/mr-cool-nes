@@ -4,6 +4,7 @@ use sdl2::image::LoadSurface;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect;
+use sdl2::render;
 use sdl2::surface::Surface;
 use std::path::Path;
 use emu_config::EmuConfig;
@@ -64,7 +65,13 @@ impl Renderer {
         'running: loop {
             self.canvas.clear();
 
-            
+            let creator = self.canvas.texture_creator();
+            let texture = creator.create_texture_from_surface(self.font.as_ref());
+            self.canvas.copy(
+                &texture.unwrap(),
+                Rect::new(16, 32, 16, 16),
+                Rect::new(0, 0, 16, 16)
+            );
             
             for event in event_pump.poll_iter() {
                 match event {
