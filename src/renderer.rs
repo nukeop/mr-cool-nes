@@ -1,6 +1,8 @@
 use sdl2;
 use sdl2::event::Event;
+use sdl2::image::LoadSurface;
 use sdl2::keyboard::Keycode;
+use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect;
 use sdl2::surface::Surface;
 use std::path::Path;
@@ -14,7 +16,9 @@ pub struct Renderer {
     config: EmuConfig,
     context: sdl2::Sdl,
     canvas: sdl2::render::Canvas<sdl2::video::Window>,
-    font: Surface<'static>
+    font: Surface<'static>,
+    emu_frame: Surface<'static>,
+    emu_screen: Surface<'static>
 }
 
 impl Renderer {
@@ -38,23 +42,29 @@ impl Renderer {
         canvas.present();
 
         let font = Renderer::create_font_surface(Path::new(&config.font_path));
+        let emu_frame = Surface::new(SCREEN_WIDTH, EMULATOR_FRAME_HEIGHT, PixelFormatEnum::RGB24).unwrap();
+        let emu_screen = Surface::new(SCREEN_WIDTH, SCREEN_HEIGHT, PixelFormatEnum::RGB24).unwrap();
         
         Renderer {
             config: config,
             context: sdl_context,
             canvas: canvas,
-            font: font
+            font: font,
+            emu_frame: emu_frame,
+            emu_screen: emu_screen
         }
     }
 
     pub fn create_font_surface(path: &Path) -> Surface<'static> {
-        return Surface::load_bmp(path).unwrap();
+        return Surface::from_file(path).unwrap();
     }
 
     pub fn start_loop(&mut self) {
         let mut event_pump = self.context.event_pump().unwrap();
         'running: loop {
             self.canvas.clear();
+
+            
             
             for event in event_pump.poll_iter() {
                 match event {
