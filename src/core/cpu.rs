@@ -8,7 +8,7 @@ pub struct Registers {
 }
 
 impl Registers {
-    fn new() -> Registers {
+    pub fn new() -> Registers {
         Registers {
             a: 0,
             x: 0,
@@ -16,6 +16,18 @@ impl Registers {
             pc: 0,
             s: 0xFD,
             p: 0x34
+        }
+    }
+}
+
+pub struct CPU {
+    regs: Registers
+}
+
+impl CPU {
+    pub fn new() -> CPU {
+        CPU {
+            regs: Registers::new()
         }
     }
 }

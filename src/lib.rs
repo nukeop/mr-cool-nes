@@ -13,4 +13,5 @@ pub mod init;
 pub mod renderer;
 
 use core::cpu;
+use core::nes;
 use core::rom;
