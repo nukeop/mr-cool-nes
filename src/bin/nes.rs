@@ -6,6 +6,7 @@ extern crate mr_cool_nes;
 
 use mr_cool_nes::init::read_cl_args;
 use mr_cool_nes::emu_config::EmuConfig;
+use mr_cool_nes::core::memory;
 use mr_cool_nes::core::nes;
 use mr_cool_nes::core::rom;
 use mr_cool_nes::renderer;
