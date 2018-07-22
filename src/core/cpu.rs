@@ -1,3 +1,5 @@
+use core::memory::Memory;
+
 pub struct Registers {
     a: u8,
     x: u8,
@@ -27,7 +29,7 @@ pub struct CPU {
 impl CPU {
     pub fn new() -> CPU {
         CPU {
-            regs: Registers::new()
+            regs: Registers::new(),
         }
     }
 }
