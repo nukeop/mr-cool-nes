@@ -3,6 +3,15 @@ use core::ppu::PPU;
 pub trait Memory {
     fn load_byte(&mut self, addr: u16) -> u8;
     fn store_byte(&mut self, addr: u16, val: u8);
+
+    fn load_word(&mut self, addr: u16) -> u16 {
+        self.load_byte(addr) as u16 | self.load_byte(addr + 1) as u16
+    }
+    
+    fn store_word(&mut self, addr: u16, val: u16) {
+        self.store_byte(addr, (val & 0xff) as u8);
+        self.store_byte(addr + 1, ((val >> 8) & 0xff) as u8);
+    }
 }
 
 pub struct RAM {
@@ -40,7 +49,11 @@ impl Memory for CPUMemoryMap {
     fn load_byte(&mut self, addr: u16) -> u8 {
         if addr < 0x2000 {
             self.ram.load_byte(addr)
-        } else {
+        }
+        else if addr < 0x4000 {
+            self.ppu.load_byte(addr)
+        }
+        else {
             0x00
         }
     }
@@ -48,6 +61,10 @@ impl Memory for CPUMemoryMap {
     fn store_byte(&mut self, addr: u16, val: u8) {
         if addr < 0x2000 {
             self.ram.store_byte(addr, val);
+        } else if addr < 0x4000 {
+            self.ppu.store_byte(addr, val);
+        } else {
+            
         }
     }
 }
