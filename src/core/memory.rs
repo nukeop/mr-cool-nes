@@ -18,6 +18,14 @@ pub struct RAM {
     pub mem: [u8; 0x800]
 }
 
+impl RAM {
+    pub fn new() -> RAM {
+        RAM {
+            mem: [0; 0x800]
+        }
+    }
+}
+
 // $07ff is the last address in RAM
 // The address argument is &'d with $07ff to ensure it's within range
 // and mirrored
@@ -39,7 +47,7 @@ pub struct CPUMemoryMap {
 impl CPUMemoryMap {
     pub fn new(ppu: PPU) -> CPUMemoryMap {
         CPUMemoryMap {
-            ram: RAM { mem: [0; 0x800] },
+            ram: RAM::new(),
             ppu: ppu
         }
     }

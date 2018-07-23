@@ -1,5 +1,6 @@
 use core::memory::Memory;
 
+#[derive(Clone, Copy)]
 pub struct Registers {
     ppu_ctrl: u8,      // $2000
     ppu_mask: u8,      // $2001
@@ -28,19 +29,37 @@ impl Registers {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct VRAM {
     nametables: [u8; 0x800],
     palettes: [u8; 0x20]
 }
 
+#[derive(Clone, Copy)]
 pub struct OAM {
     oam: [u8; 0x100]
 }
 
+#[derive(Clone, Copy)]
 pub struct PPU {
     regs: Registers,
     vram: VRAM,
     oam: OAM
+}
+
+impl PPU {
+    pub fn new() -> PPU {
+        PPU {
+            regs: Registers::new(),
+            vram: VRAM{
+                nametables: [0; 0x800],
+                palettes: [0; 0x20]
+            },
+            oam: OAM{
+                oam: [0; 0x100]
+            }
+        }
+    }
 }
 
 impl Memory for PPU {
