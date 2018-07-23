@@ -25,7 +25,7 @@ fn main() {
     info!("Loading a ROM from: {}", rom_path);
     let rom = rom::Rom::load(rom_path).unwrap();
 
-    let nes = nes::NES::new();
+    let nesBuilder = nes::NESBuilder::new();
 
     let mut renderer = renderer::Renderer::new(config, rom_path);
     renderer.start_loop();

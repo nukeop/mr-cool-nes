@@ -1,16 +1,26 @@
 use cpu;
 use core::memory;
+use core::ppu;
 
 pub struct NES {
     cpu: cpu::CPU,
+    ppu: ppu::PPU,
     ram: memory::RAM
 }
 
-impl NES {
-    pub fn new() -> NES {
-        NES {
-            cpu: cpu::CPU::new(),
-            ram: memory::RAM { mem: [ 0; 0x800 ] }
+pub struct NESBuilder {
+
+}
+
+impl NESBuilder {
+    pub fn new() -> NESBuilder {
+        NESBuilder {
+
         }
     }
+
+    // pub fn finalize(&self) -> NES {
+    //     NES {}
+    // }
 }
+

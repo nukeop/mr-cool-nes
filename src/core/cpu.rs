@@ -1,4 +1,22 @@
-use core::memory::Memory;
+use core::memory::{CPUMemoryMap, Memory};
+use core::ppu::PPU;
+
+trait AddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8;
+    fn store(&self, cpu: &mut CPU, val: u8);
+}
+
+struct AccumulatorAddressingMode;
+impl AddressingMode for AccumulatorAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 { cpu.regs.a }
+    fn store(&self, cpu: &mut CPU, val: u8) { cpu.regs.a = val; }
+}
+
+struct ImmediateAddressingMode;
+impl AddressingMode for ImmediateAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 { 0x00 }
+    fn store(&self, cpu: &mut CPU, val: u8) {}
+}
 
 pub struct Registers {
     a: u8,
@@ -23,13 +41,15 @@ impl Registers {
 }
 
 pub struct CPU {
-    regs: Registers
+    regs: Registers,
+    mem_map: CPUMemoryMap
 }
 
 impl CPU {
-    pub fn new() -> CPU {
+    pub fn new(ppu: PPU) -> CPU {
         CPU {
             regs: Registers::new(),
+            mem_map: CPUMemoryMap::new(ppu)
         }
     }
 }
