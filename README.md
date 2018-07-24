@@ -1,4 +1,4 @@
-# mr-cool-nes
+# mr-cool-nes ![Travis (.org)](https://img.shields.io/travis/nukeop/mr-cool-nes.svg?style=for-the-badge)
 NES emulator (in development)
 
 ## Getting started
