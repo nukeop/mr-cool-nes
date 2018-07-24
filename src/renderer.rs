@@ -28,6 +28,7 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new(config: EmuConfig, rom_path: &String) -> Renderer {
+        info!("Creating an SDL renderer...");
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
         
@@ -85,6 +86,7 @@ impl Renderer {
     }
 
     pub fn start_loop(&mut self) {
+        info!("Starting render loop");
         let rom_name = self.rom_path.to_owned();
         let rom_name_path = Path::new(&rom_name);
         let rom_filename = rom_name_path

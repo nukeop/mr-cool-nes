@@ -49,6 +49,7 @@ pub struct PPU {
 
 impl PPU {
     pub fn new() -> PPU {
+        info!("Creating a PPU...");
         PPU {
             regs: Registers::new(),
             vram: VRAM{

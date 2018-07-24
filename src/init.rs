@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 use clap::{App, Arg};
+use core;
+use emu_config::EmuConfig;
+use renderer::Renderer;
 
 pub fn read_cl_args<'a>() -> HashMap<String, String> {
     let matches = App::new("mr-cool-nes")
@@ -24,4 +27,18 @@ pub fn read_cl_args<'a>() -> HashMap<String, String> {
     result.insert("rom".to_owned(), rom);
     result.insert("config".to_owned(), config);
     result
+}
+
+pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String) {
+    let ppu = core::ppu::PPU::new();
+    let ram = core::memory::RAM::new();
+    let cpu = core::cpu::CPU::new(ppu, ram);
+
+    let nes = core::nes::NESBuilder::new()
+        .ppu(ppu)
+        .cpu(cpu)
+        .finalize();
+
+    let mut renderer = Renderer::new(config, rom_path);
+    renderer.start_loop();
 }

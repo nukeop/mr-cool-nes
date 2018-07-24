@@ -1,4 +1,4 @@
-use core::memory::{CPUMemoryMap, Memory};
+use core::memory::{CPUMemoryMap, Memory, RAM};
 use core::ppu::PPU;
 
 trait AddressingMode {
@@ -46,10 +46,11 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(ppu: PPU) -> CPU {
+    pub fn new(ppu: PPU, ram: RAM) -> CPU {
+        info!("Creating a CPU...");
         CPU {
             regs: Registers::new(),
-            mem_map: CPUMemoryMap::new(ppu)
+            mem_map: CPUMemoryMap::new(ppu, ram)
         }
     }
 }

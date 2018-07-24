@@ -4,26 +4,22 @@ use core::ppu;
 
 pub struct NES {
     cpu: cpu::CPU,
-    ppu: ppu::PPU,
-    ram: memory::RAM
+    ppu: ppu::PPU
 }
 
 pub struct NESBuilder {
     cpu: Option<cpu::CPU>,
-    ppu: Option<ppu::PPU>,
-    ram: Option<memory::RAM>
+    ppu: Option<ppu::PPU>
 }
 
 impl NESBuilder {
     pub fn new() -> NESBuilder {
         let ppu = None;
         let cpu = None;
-        let ram = None;
         
         NESBuilder {
             cpu: cpu,
-            ppu: ppu,
-            ram: ram
+            ppu: ppu
         }
     }
 
@@ -37,16 +33,11 @@ impl NESBuilder {
         self
     }
 
-    pub fn ram(mut self, ram: memory::RAM) -> NESBuilder {
-        self.ram = Some(ram);
-        self
-    }
-
     pub fn finalize(self) -> NES {
+        info!("Creating a NES...");
         NES {
             cpu: self.cpu.unwrap(),
-            ppu: self.ppu.unwrap(),
-            ram: self.ram.unwrap()
+            ppu: self.ppu.unwrap()
         }
     }
 }

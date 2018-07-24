@@ -20,6 +20,7 @@ pub struct RAM {
 
 impl RAM {
     pub fn new() -> RAM {
+        info!("Creating RAM...");
         RAM {
             mem: [0; 0x800]
         }
@@ -45,9 +46,9 @@ pub struct CPUMemoryMap {
 }
 
 impl CPUMemoryMap {
-    pub fn new(ppu: PPU) -> CPUMemoryMap {
+    pub fn new(ppu: PPU, ram: RAM) -> CPUMemoryMap {
         CPUMemoryMap {
-            ram: RAM::new(),
+            ram: ram,
             ppu: ppu
         }
     }
