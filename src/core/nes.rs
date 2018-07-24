@@ -1,4 +1,4 @@
-use cpu;
+use core::cpu;
 use core::memory;
 use core::ppu;
 

@@ -10,8 +10,3 @@ pub mod emu_config;
 pub mod font_map;
 pub mod init;
 pub mod renderer;
-
-use core::cpu;
-use core::nes;
-use core::rom;
-use core::ppu;
