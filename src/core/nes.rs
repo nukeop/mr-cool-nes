@@ -27,17 +27,17 @@ impl NESBuilder {
         }
     }
 
-    pub fn cpu(&mut self, cpu: cpu::CPU) -> &mut NESBuilder {
+    pub fn cpu(mut self, cpu: cpu::CPU) -> NESBuilder {
         self.cpu = Some(cpu);
         self
     }
 
-    pub fn ppu(&mut self, ppu: ppu::PPU) -> &mut NESBuilder {
+    pub fn ppu(mut self, ppu: ppu::PPU) -> NESBuilder {
         self.ppu = Some(ppu);
         self
     }
 
-    pub fn ram(&mut self, ram: memory::RAM) -> &mut NESBuilder {
+    pub fn ram(mut self, ram: memory::RAM) -> NESBuilder {
         self.ram = Some(ram);
         self
     }
