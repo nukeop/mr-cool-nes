@@ -17,9 +17,9 @@ pub struct INesHeader {
 
 #[derive(Debug)]
 pub struct Rom {
-    header: INesHeader,
-    prg_rom: Vec<u8>,
-    chr_rom: Vec<u8>
+    pub header: INesHeader,
+    pub prg_rom: Vec<u8>,
+    pub chr_rom: Vec<u8>
 }
 
 impl Rom {

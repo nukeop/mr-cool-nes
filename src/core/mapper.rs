@@ -1,11 +1,26 @@
-pub trait Mapper {
-    fn load_pgr_rom(&self);
-    fn load_chr_rom(&self);
-    fn load_battery_ram(&self);
+use core::rom::Rom;
 
-    fn load_rom(&self) {
-        self.load_pgr_rom();
-        self.load_chr_rom();
-        self.load_battery_ram();
+pub trait Mapper {
+    fn load_prg_byte(&self, addr: u16) -> u8;
+    fn load_chr_byte(&self, addr: u16) -> u8;
+}
+
+pub struct NROM {
+    rom: Rom
+}
+
+impl Mapper for NROM {
+    fn load_prg_byte(&self, addr: u16) -> u8 {
+        if addr < 0x8000 {
+            0
+        } else if self.rom.prg_rom.len() > 0x4000 {
+            self.rom.prg_rom[addr as usize & 0x7fff]
+        } else {
+            self.rom.prg_rom[addr as usize & 0x3fff]
+        }
+    }
+
+    fn load_chr_byte(&self, addr: u16) -> u8 {
+        self.rom.chr_rom[addr as usize]
     }
 }
