@@ -9,16 +9,16 @@ pub struct NES {
 }
 
 pub struct NESBuilder {
-    cpu: cpu::CPU,
-    ppu: ppu::PPU,
-    ram: memory::RAM
+    cpu: Option<cpu::CPU>,
+    ppu: Option<ppu::PPU>,
+    ram: Option<memory::RAM>
 }
 
 impl NESBuilder {
     pub fn new() -> NESBuilder {
-        let ppu = ppu::PPU::new();
-        let cpu = cpu::CPU::new(ppu);
-        let ram = memory::RAM::new();
+        let ppu = None;
+        let cpu = None;
+        let ram = None;
         
         NESBuilder {
             cpu: cpu,
@@ -28,25 +28,25 @@ impl NESBuilder {
     }
 
     pub fn cpu(&mut self, cpu: cpu::CPU) -> &mut NESBuilder {
-        self.cpu = cpu;
+        self.cpu = Some(cpu);
         self
     }
 
     pub fn ppu(&mut self, ppu: ppu::PPU) -> &mut NESBuilder {
-        self.ppu = ppu;
+        self.ppu = Some(ppu);
         self
     }
 
     pub fn ram(&mut self, ram: memory::RAM) -> &mut NESBuilder {
-        self.ram = ram;
+        self.ram = Some(ram);
         self
     }
 
     pub fn finalize(self) -> NES {
         NES {
-            cpu: self.cpu,
-            ppu: self.ppu,
-            ram: self.ram
+            cpu: self.cpu.unwrap(),
+            ppu: self.ppu.unwrap(),
+            ram: self.ram.unwrap()
         }
     }
 }
