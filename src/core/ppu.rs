@@ -2,15 +2,15 @@ use core::memory::Memory;
 
 #[derive(Clone, Copy)]
 pub struct Registers {
-    ppu_ctrl: u8,      // $2000
-    ppu_mask: u8,      // $2001
-    ppu_status: u8,    // $2002
-    oam_addr: u8,      // $2003
-    oam_data: u8,      // $2004
-    ppu_scroll: u8,    // $2005
-    ppu_addr: u8,      // $2006
-    ppu_data: u8,      // $2007
-    oam_dma: u8        // $4014
+    pub ppu_ctrl: u8,      // $2000
+    pub ppu_mask: u8,      // $2001
+    pub ppu_status: u8,    // $2002
+    pub oam_addr: u8,      // $2003
+    pub oam_data: u8,      // $2004
+    pub ppu_scroll: u8,    // $2005
+    pub ppu_addr: u8,      // $2006
+    pub ppu_data: u8,      // $2007
+    pub oam_dma: u8        // $4014
 }
 
 impl Registers {
@@ -42,7 +42,7 @@ pub struct OAM {
 
 #[derive(Clone, Copy)]
 pub struct PPU {
-    regs: Registers,
+    pub regs: Registers,
     vram: VRAM,
     oam: OAM
 }

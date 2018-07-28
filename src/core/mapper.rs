@@ -24,3 +24,21 @@ impl Mapper for NROM {
         self.rom.chr_rom[addr as usize]
     }
 }
+
+pub struct SxROMRegisters {
+    
+}
+
+pub struct SxROM {
+    rom: Rom
+}
+
+impl Mapper for SxROM {
+    fn load_prg_byte(&self, addr: u16) -> u8 {
+        0x00
+    }
+
+    fn load_chr_byte(&self, addr: u16) -> u8 {
+        0x00
+    }
+}

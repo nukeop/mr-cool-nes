@@ -12,3 +12,6 @@ pretty_env_logger = "0.2.4"
 [dependencies.sdl2]
 version = "0.31.0"
 features = ["image"]
+
+[badges]
+travis = { repository = "nukeop/mr-cool-nes" }
