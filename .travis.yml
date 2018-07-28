@@ -11,12 +11,24 @@ matrix:
 
 cache: cargo
 
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install libegl1-mesa-dev libgles2-mesa-dev -y
-  - sudo apt-get install libsdl2-dev -y
-  - sudo apt-get install libsdl2-image-dev -y
+addons:
+  apt:
+    packages:
+      - libegl1-mesa-dev
+      - libgles2-mesa-dev
+      - libsdl2-dev
+      - libsdl2-image-dev
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - binutils-dev
+      - libiberty-dev
 
+after_success:
+  - bash coverage.sh
+      
 before_deploy:
   - cargo build --release --target=x86_64-unknown-linux-gnu
   - mv target/x86_64-unknown-linux-gnu/release/nes .
