@@ -27,6 +27,7 @@ addons:
       - libiberty-dev
 
 after_success:
+  - cargo build --examples
   - bash coverage.sh
       
 before_deploy:
