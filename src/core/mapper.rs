@@ -9,6 +9,14 @@ pub struct NROM {
     rom: Rom
 }
 
+impl NROM {
+    pub fn new(rom: Rom) -> NROM {
+        NROM {
+            rom
+        }
+    }
+}
+
 impl Mapper for NROM {
     fn load_prg_byte(&self, addr: u16) -> u8 {
         if addr < 0x8000 {
@@ -26,11 +34,37 @@ impl Mapper for NROM {
 }
 
 pub struct SxROMRegisters {
-    
+    ctrl: u8,
+    chr_bank0: u8,
+    chr_bank1: u8,
+    prg_bank: u8
+}
+
+impl SxROMRegisters {
+    pub fn new() -> SxROMRegisters {
+        SxROMRegisters {
+            ctrl: 12,
+            chr_bank0: 0,
+            chr_bank1: 0,
+            prg_bank: 0
+        }
+    }
 }
 
 pub struct SxROM {
-    rom: Rom
+    rom: Rom,
+    regs: SxROMRegisters,
+    chr_ram: [u8; 0x2000]
+}
+
+impl SxROM {
+    pub fn new(rom: Rom) -> SxROM {
+        SxROM {
+            rom,
+            regs: SxROMRegisters::new(),
+            chr_ram: [0; 0x2000]
+        }
+    }
 }
 
 impl Mapper for SxROM {
