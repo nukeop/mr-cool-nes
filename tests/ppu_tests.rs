@@ -10,6 +10,23 @@ mod ppu_tests {
     }
 
     #[test]
+    fn ppu_new() {
+        let ppu = setup_ppu();
+        assert_eq!(ppu.regs.ppu_ctrl, 0x0);
+        assert_eq!(ppu.regs.ppu_mask, 0x0);
+        assert_eq!(ppu.regs.ppu_status, 0x0);
+        assert_eq!(ppu.regs.oam_addr, 0x0);
+        assert_eq!(ppu.regs.oam_data, 0x0);
+        assert_eq!(ppu.regs.ppu_scroll, 0x0);
+        assert_eq!(ppu.regs.ppu_addr, 0x0);
+        assert_eq!(ppu.regs.ppu_data, 0x0);
+        assert_eq!(ppu.regs.oam_dma, 0x0);
+        assert!(ppu.vram.nametables.iter().zip([0; 0x800].iter()).all(|(a,b)| a == b), "Arrays are not equal");
+        assert!(ppu.vram.palettes.iter().zip([0; 0x20].iter()).all(|(a,b)| a == b), "Arrays are not equal");
+        assert!(ppu.oam.oam.iter().zip([0; 0x100].iter()).all(|(a,b)| a == b), "Arrays are not equal");
+    }
+
+    #[test]
     fn store_byte_ppu_ctrl() {
         let mut ppu = setup_ppu();
         ppu.store_byte(0x2000, 0xDD);

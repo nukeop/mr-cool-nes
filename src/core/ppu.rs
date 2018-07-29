@@ -31,20 +31,20 @@ impl Registers {
 
 #[derive(Clone, Copy)]
 pub struct VRAM {
-    nametables: [u8; 0x800],
-    palettes: [u8; 0x20]
+    pub nametables: [u8; 0x800],
+    pub palettes: [u8; 0x20]
 }
 
 #[derive(Clone, Copy)]
 pub struct OAM {
-    oam: [u8; 0x100]
+    pub oam: [u8; 0x100]
 }
 
 #[derive(Clone, Copy)]
 pub struct PPU {
     pub regs: Registers,
-    vram: VRAM,
-    oam: OAM
+    pub vram: VRAM,
+    pub oam: OAM
 }
 
 impl PPU {
