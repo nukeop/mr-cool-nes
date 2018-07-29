@@ -6,7 +6,7 @@ mod ppu_tests {
     use mr_cool_nes::core::memory::Memory;
 
     fn setup_ppu() -> PPU{
-        return PPU::new();
+        PPU::new()
     }
 
     #[test]

@@ -41,8 +41,8 @@ impl Registers {
 }
 
 pub struct CPU {
-    regs: Registers,
-    mem_map: CPUMemoryMap
+    pub regs: Registers,
+    pub mem_map: CPUMemoryMap
 }
 
 impl CPU {
@@ -51,6 +51,29 @@ impl CPU {
         CPU {
             regs: Registers::new(),
             mem_map: CPUMemoryMap::new(ppu, ram)
+        }
+    }
+
+    fn dma(&mut self, high_byte: u8) {
+        let start = (high_byte as u16) << 8;
+
+        for addr in start..start + 256 {
+            let val = self.load_byte(addr);
+            self.store_byte(0x2004, val);
+        }
+    }
+}
+
+impl Memory for CPU {
+    fn load_byte(&mut self, addr: u16) -> u8 {
+        self.mem_map.load_byte(addr)
+    }
+
+    fn store_byte(&mut self, addr: u16, val: u8) {
+        if addr == 0x4014 {
+            self.dma(val);
+        } else {
+            self.mem_map.store_byte(addr, val);
         }
     }
 }

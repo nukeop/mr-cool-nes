@@ -41,8 +41,8 @@ impl Memory for RAM {
 }
 
 pub struct CPUMemoryMap {
-    ram: RAM,
-    ppu: PPU
+    pub ram: RAM,
+    pub ppu: PPU
 }
 
 impl CPUMemoryMap {
