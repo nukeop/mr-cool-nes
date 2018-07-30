@@ -15,6 +15,12 @@ pub struct INesHeader {
     zero: [u8; 5]
 }
 
+impl INesHeader {
+    pub fn mapper_number(&self) -> u8 {
+        return (self.flags_7 & 0xF0) | (self.flags_6 >> 4);
+    }
+}
+
 #[derive(Debug)]
 pub struct Rom {
     pub header: INesHeader,

@@ -3,6 +3,18 @@ use core::rom::Rom;
 pub trait Mapper {
     fn load_prg_byte(&self, addr: u16) -> u8;
     fn load_chr_byte(&self, addr: u16) -> u8;
+    fn store_prg_byte(&self, addr: u16, val: u8);
+    fn store_chr_byte(&self, addr: u16, val: u8);
+}
+
+pub fn select_mapper(rom: Rom) -> Box<Mapper> {
+    let mapper_number = rom.header.mapper_number();
+    info!("Mapper number: {:X}", mapper_number);
+    
+    match mapper_number {
+        0 => Box::new(NROM::new(rom)) as Box<Mapper>,
+        _ => panic!("Unimplemented mapper: {:X}", mapper_number)
+    }
 }
 
 pub struct NROM {
@@ -31,6 +43,9 @@ impl Mapper for NROM {
     fn load_chr_byte(&self, addr: u16) -> u8 {
         self.rom.chr_rom[addr as usize]
     }
+
+    fn store_prg_byte(&self, addr: u16, val: u8) {}
+    fn store_chr_byte(&self, addr: u16, val: u8) {}
 }
 
 pub struct SxROMRegisters {
@@ -75,4 +90,7 @@ impl Mapper for SxROM {
     fn load_chr_byte(&self, addr: u16) -> u8 {
         0x00
     }
+
+    fn store_prg_byte(&self, addr: u16, val: u8) {}
+    fn store_chr_byte(&self, addr: u16, val: u8) {}
 }

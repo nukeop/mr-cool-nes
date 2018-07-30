@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use clap::{App, Arg};
 use core;
+use core::mapper;
 use emu_config::EmuConfig;
 use renderer::Renderer;
 
@@ -38,6 +39,8 @@ pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String) {
         .ppu(ppu)
         .cpu(cpu)
         .finalize();
+
+    let mapper = mapper::select_mapper(rom);
 
     let mut renderer = Renderer::new(config, rom_path);
     renderer.start_loop();
