@@ -1,6 +1,10 @@
 use core::memory::{CPUMemoryMap, Memory, RAM};
 use core::ppu::PPU;
 
+const NMI_VECTOR = $FFFA;
+const RESET_VECTOR = $FFFC;
+const BRK_VECTOR = $FFFE;
+
 trait AddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8;
     fn store(&self, cpu: &mut CPU, val: u8);
