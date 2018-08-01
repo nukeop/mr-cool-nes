@@ -107,6 +107,7 @@ impl Renderer {
                 match event {
                     Event::Quit {..} |
                     Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                        info!("Quit event received, shutting down");
                         break 'running
                     },
                     _ => {}
