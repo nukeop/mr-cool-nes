@@ -31,16 +31,15 @@ pub fn read_cl_args<'a>() -> HashMap<String, String> {
 }
 
 pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String) {
+    let mapper = mapper::select_mapper(rom);
     let ppu = core::ppu::PPU::new();
     let ram = core::memory::RAM::new();
-    let cpu = core::cpu::CPU::new(ppu, ram);
+    let cpu = core::cpu::CPU::new(ppu, ram, mapper);
 
     let nes = core::nes::NESBuilder::new()
         .ppu(ppu)
         .cpu(cpu)
         .finalize();
-
-    let mapper = mapper::select_mapper(rom);
 
     let mut renderer = Renderer::new(config, rom_path);
     renderer.start_loop();

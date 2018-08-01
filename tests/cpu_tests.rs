@@ -5,11 +5,30 @@ mod ppu_tests {
     use mr_cool_nes::core::cpu::CPU;
     use mr_cool_nes::core::ppu::PPU;
     use mr_cool_nes::core::memory::{Memory, RAM};
+    use mr_cool_nes::core::rom::{INesHeader, Rom};
+    use mr_cool_nes::core::mapper::NROM;
 
     fn setup_cpu() -> CPU {
+        let rom = Rom {
+            header: INesHeader {
+                magic: ['N' as u8, 'E' as u8, 'S' as u8, '\x1a' as u8],
+                prg_rom_size: 1,
+                chr_rom_size: 1,
+                flags_6: 0,
+                flags_7: 0,
+                prg_ram_size: 1,
+                flags_9: 0,
+                flags_10: 0,
+                zero: [0; 5]
+            },
+            prg_rom: vec![0; 16384],
+            chr_rom: vec![0; 16384]
+        };
+        
         let ram = RAM::new();
         let ppu = PPU::new();
-        CPU::new(ppu, ram)
+        let mapper = NROM::new(rom);
+        CPU::new(ppu, ram, Box::new(mapper))
     }
 
     #[test]

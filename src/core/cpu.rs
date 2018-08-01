@@ -1,3 +1,4 @@
+use core::mapper::Mapper;
 use core::memory::{CPUMemoryMap, Memory, RAM};
 use core::ppu::PPU;
 
@@ -50,11 +51,11 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(ppu: PPU, ram: RAM) -> CPU {
+    pub fn new(ppu: PPU, ram: RAM, mapper: Box<Mapper>) -> CPU {
         info!("Creating a CPU...");
         CPU {
             regs: Registers::new(),
-            mem_map: CPUMemoryMap::new(ppu, ram)
+            mem_map: CPUMemoryMap::new(ppu, ram, mapper)
         }
     }
 

@@ -1,4 +1,5 @@
 use core::ppu::PPU;
+use core::mapper::Mapper;
 
 pub trait Memory {
     fn load_byte(&mut self, addr: u16) -> u8;
@@ -42,14 +43,16 @@ impl Memory for RAM {
 
 pub struct CPUMemoryMap {
     pub ram: RAM,
-    pub ppu: PPU
+    pub ppu: PPU,
+    pub mapper: Box<Mapper>
 }
 
 impl CPUMemoryMap {
-    pub fn new(ppu: PPU, ram: RAM) -> CPUMemoryMap {
+    pub fn new(ppu: PPU, ram: RAM, mapper: Box<Mapper>) -> CPUMemoryMap {
         CPUMemoryMap {
-            ram: ram,
-            ppu: ppu
+            ram,
+            ppu,
+            mapper
         }
     }
 }
@@ -73,7 +76,7 @@ impl Memory for CPUMemoryMap {
         } else if addr < 0x4000 {
             self.ppu.store_byte(addr, val);
         } else {
-            
+            //self.mapper.prg_loadb(addr);
         }
     }
 }
