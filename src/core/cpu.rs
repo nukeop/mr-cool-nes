@@ -67,6 +67,14 @@ impl CPU {
             self.store_byte(0x2004, val);
         }
     }
+
+    pub fn reset(&mut self) {
+        self.regs.pc = self.load_word(RESET_VECTOR);
+    }
+
+    pub fn step(&mut self) {
+
+    }
 }
 
 impl Memory for CPU {

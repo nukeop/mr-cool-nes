@@ -3,8 +3,8 @@ use core::memory;
 use core::ppu;
 
 pub struct NES {
-    cpu: cpu::CPU,
-    ppu: ppu::PPU
+    pub cpu: cpu::CPU,
+    pub ppu: ppu::PPU
 }
 
 pub struct NESBuilder {
