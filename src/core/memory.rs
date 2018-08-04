@@ -61,12 +61,12 @@ impl Memory for CPUMemoryMap {
     fn load_byte(&mut self, addr: u16) -> u8 {
         if addr < 0x2000 {
             self.ram.load_byte(addr)
-        }
-        else if addr < 0x4000 {
+        } else if addr < 0x4000 {
             self.ppu.load_byte(addr)
-        }
-        else {
-            0x00
+        } else if addr < 0x6000 {
+            0
+        } else {
+            self.mapper.load_prg_byte(addr)
         }
     }
 
@@ -75,8 +75,10 @@ impl Memory for CPUMemoryMap {
             self.ram.store_byte(addr, val);
         } else if addr < 0x4000 {
             self.ppu.store_byte(addr, val);
+        } else if addr < 0x6000 {
+
         } else {
-            self.mapper.load_prg_byte(addr);
+            self.mapper.store_prg_byte(addr, val);
         }
     }
 }

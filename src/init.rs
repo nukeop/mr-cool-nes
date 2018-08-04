@@ -45,5 +45,5 @@ pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String) {
     nes.cpu.reset();
     
     let mut renderer = Renderer::new(config, rom_path);
-    renderer.start_loop();
+    renderer.start_loop(|| nes.cpu.step());
 }
