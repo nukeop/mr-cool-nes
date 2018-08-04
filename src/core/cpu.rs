@@ -48,7 +48,7 @@ impl Registers {
 
 impl fmt::Display for Registers {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "\na: {}\nx: {}\ny: {}\npc: {}\ns: {}\np: {}",
+        write!(f, "\na: {:X}\nx: {:X}\ny: {:X}\npc: {:X}\ns: {:X}\np: {:X}",
                self.a, self.x, self.y, self.pc, self.s, self.p)
     }
 }
@@ -77,7 +77,6 @@ impl CPU {
     }
 
     pub fn reset(&mut self) {
-       
         self.regs.pc = self.load_word(RESET_VECTOR);
         info!("Regs after reset: {}", self.regs);
     }
@@ -85,9 +84,20 @@ impl CPU {
     pub fn step(&mut self) {
         let pc = self.regs.pc;
         let next = self.load_byte(pc);
+        self.decode(next);
+        
         self.regs.pc += 1;
-        info!("PC: {}", pc);
-        info!("Next instruction: {}", next);
+    }
+
+    pub fn decode(&mut self, opcode: u8) {
+        match opcode {
+            0x00 => self.brk(),
+            _ => panic!("Unimplemented opcode: {:X}", opcode)
+        };
+    }
+
+    fn brk(&mut self) {
+
     }
 }
 

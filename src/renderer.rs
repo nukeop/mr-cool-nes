@@ -99,7 +99,7 @@ impl Renderer {
         let mut event_pump = self.context.event_pump().unwrap();
         'running: loop {
             // Update
-            //update();
+            update();
 
             // Draw
             self.canvas.clear();
