@@ -76,7 +76,7 @@ impl Memory for CPUMemoryMap {
         } else if addr < 0x4000 {
             self.ppu.store_byte(addr, val);
         } else {
-            //self.mapper.prg_loadb(addr);
+            self.mapper.load_prg_byte(addr);
         }
     }
 }

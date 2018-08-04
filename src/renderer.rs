@@ -85,7 +85,7 @@ impl Renderer {
         self.draw_text(&("Mr. Cool NES".to_owned()), 0, 0);
     }
 
-    pub fn start_loop(&mut self) {
+    pub fn start_loop<F>(&mut self, mut update: F) where F: FnMut() -> () {
         info!("Starting render loop");
         let rom_name = self.rom_path.to_owned();
         let rom_name_path = Path::new(&rom_name);
@@ -98,6 +98,10 @@ impl Renderer {
         
         let mut event_pump = self.context.event_pump().unwrap();
         'running: loop {
+            // Update
+            //update();
+
+            // Draw
             self.canvas.clear();
 
             self.draw_title();
