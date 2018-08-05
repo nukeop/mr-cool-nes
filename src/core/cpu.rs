@@ -7,14 +7,13 @@ const NMI_VECTOR: u16 = 0xFFFA;
 const RESET_VECTOR: u16 = 0xFFFC;
 const BRK_VECTOR: u16 = 0xFFFE;
 
-const F_CARRY: u8 = 0x01;
-const F_ZERO: u8 = 0x02;
-const F_INTERRUPT: u8 = 0x04;
-const F_DECIMAL: u8 = 0x08;
-const F_BREAK: u8 = 0x10;
-const F_OVERFLOW: u8 = 0x40;
-const F_NEGATIVE: u8 = 0x80;
-
+pub const F_CARRY: u8 = 0x01;
+pub const F_ZERO: u8 = 0x02;
+pub const F_INTERRUPT: u8 = 0x04;
+pub const F_DECIMAL: u8 = 0x08;
+pub const F_BREAK: u8 = 0x10;
+pub const F_OVERFLOW: u8 = 0x40;
+pub const F_NEGATIVE: u8 = 0x80;
 
 trait AddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8;
@@ -34,12 +33,12 @@ impl AddressingMode for ImmediateAddressingMode {
 }
 
 pub struct Registers {
-    a: u8,
-    x: u8,
-    y: u8,
-    pc: u16,
-    s: u8,
-    p: u8
+    pub a: u8,
+    pub x: u8,
+    pub y: u8,
+    pub pc: u16,
+    pub s: u8,
+    pub p: u8
 }
 
 impl Registers {
@@ -92,13 +91,13 @@ impl CPU {
 
     pub fn push_byte(&mut self, val: u8) {
         let s = self.regs.s;
-        self.store_byte((0x100 + s) as u16, val);
+        self.store_byte(0x100 + s as u16, val);
         self.regs.s -= 1;
     }
 
     pub fn push_word(&mut self, val: u16) {
         let s = self.regs.s;
-        self.store_word((0x100 + s - 1) as u16, val);
+        self.store_word(0x100 + (s - 1) as u16, val);
         self.regs.s -= 2;
     }
 
@@ -113,17 +112,20 @@ impl CPU {
     pub fn decode(&mut self, opcode: u8) {
         match opcode {
             0x00 => self.brk(),
+            0xE3 => self.noop(), // Unofficial opcode
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
 
-    fn set_flag(&mut self, flag: u8, state: bool) {
+    pub fn set_flag(&mut self, flag: u8, state: bool) {
         if state {
             self.regs.p |= flag;
         } else {
             self.regs.p &= !flag;
         }
     }
+
+    fn noop(&self) {}
 
     fn brk(&mut self) {
         self.regs.pc += 2;

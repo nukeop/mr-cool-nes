@@ -2,7 +2,7 @@ extern crate mr_cool_nes;
 
 #[cfg(test)]
 mod ppu_tests {
-    use mr_cool_nes::core::cpu::CPU;
+    use mr_cool_nes::core::cpu::*;
     use mr_cool_nes::core::ppu::PPU;
     use mr_cool_nes::core::memory::{Memory, RAM};
     use mr_cool_nes::core::rom::{INesHeader, Rom};
@@ -52,5 +52,69 @@ mod ppu_tests {
         cpu.store_byte(final_addr, 0xDD);
         cpu.store_byte(0x4014, 0x0);
         assert_eq!(cpu.mem_map.ram.mem[final_addr as usize], 0xDD);
+    }
+
+    #[test]
+    fn push_byte_on_stack() {
+        let mut cpu = setup_cpu();
+        cpu.push_byte(0xDD);
+        assert_eq!(cpu.mem_map.ram.mem[(0x100 + (cpu.regs.s + 1) as u16) as usize], 0xDD);
+    }
+
+    #[test]
+    fn push_word_on_stack() {
+        let mut cpu = setup_cpu();
+        cpu.push_word(0xCCDD);
+        assert_eq!(cpu.mem_map.ram.mem[(0x100 + (cpu.regs.s + 1) as u16) as usize], 0xDD);
+        assert_eq!(cpu.mem_map.ram.mem[(0x100 + (cpu.regs.s + 2) as u16) as usize], 0xCC);
+    }
+
+    #[test]
+    fn reset() {
+        let mut cpu = setup_cpu();
+        cpu.reset();
+        assert_eq!(cpu.regs.pc, 0x0000);
+    }
+
+    #[test]
+    fn set_flag_carry() {
+        let mut cpu = setup_cpu();
+        cpu.set_flag(F_CARRY, true);
+        assert_eq!(cpu.regs.p & 0x01, 1);
+    }
+
+    #[test]
+    fn set_flag_interrupt() {
+        let mut cpu = setup_cpu();
+        cpu.set_flag(F_INTERRUPT, true);
+        assert_eq!(cpu.regs.p & 0x04, 0x04);
+    }
+
+    #[test]
+    fn set_flag_decimal() {
+        let mut cpu = setup_cpu();
+        cpu.set_flag(F_DECIMAL, true);
+        assert_eq!(cpu.regs.p & 0x08, 0x08);
+    }
+
+    #[test]
+    fn set_flag_break() {
+        let mut cpu = setup_cpu();
+        cpu.set_flag(F_BREAK, true);
+        assert_eq!(cpu.regs.p & 0x10, 0x10);
+    }
+
+    #[test]
+    fn set_flag_overflow() {
+        let mut cpu = setup_cpu();
+        cpu.set_flag(F_OVERFLOW, true);
+        assert_eq!(cpu.regs.p & 0x40, 0x40);
+    }
+
+    #[test]
+    fn set_flag_negative() {
+        let mut cpu = setup_cpu();
+        cpu.set_flag(F_NEGATIVE, true);
+        assert_eq!(cpu.regs.p & 0x80, 0x80);
     }
 }
