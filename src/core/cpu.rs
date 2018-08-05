@@ -7,6 +7,15 @@ const NMI_VECTOR: u16 = 0xFFFA;
 const RESET_VECTOR: u16 = 0xFFFC;
 const BRK_VECTOR: u16 = 0xFFFE;
 
+const F_CARRY: u8 = 0x01;
+const F_ZERO: u8 = 0x02;
+const F_INTERRUPT: u8 = 0x04;
+const F_DECIMAL: u8 = 0x08;
+const F_BREAK: u8 = 0x10;
+const F_OVERFLOW: u8 = 0x40;
+const F_NEGATIVE: u8 = 0x80;
+
+
 trait AddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8;
     fn store(&self, cpu: &mut CPU, val: u8);
@@ -81,6 +90,18 @@ impl CPU {
         info!("Regs after reset: {}", self.regs);
     }
 
+    pub fn push_byte(&mut self, val: u8) {
+        let s = self.regs.s;
+        self.store_byte((0x100 + s) as u16, val);
+        self.regs.s -= 1;
+    }
+
+    pub fn push_word(&mut self, val: u16) {
+        let s = self.regs.s;
+        self.store_word((0x100 + s - 1) as u16, val);
+        self.regs.s -= 2;
+    }
+
     pub fn step(&mut self) {
         let pc = self.regs.pc;
         let next = self.load_byte(pc);
@@ -92,12 +113,26 @@ impl CPU {
     pub fn decode(&mut self, opcode: u8) {
         match opcode {
             0x00 => self.brk(),
-            _ => panic!("Unimplemented opcode: {:X}", opcode)
+            _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
 
-    fn brk(&mut self) {
+    fn set_flag(&mut self, flag: u8, state: bool) {
+        if state {
+            self.regs.p |= flag;
+        } else {
+            self.regs.p &= !flag;
+        }
+    }
 
+    fn brk(&mut self) {
+        self.regs.pc += 2;
+        let pc = self.regs.pc;
+        let p = self.regs.p;
+        self.push_word(pc);
+        self.push_byte(p);
+        self.set_flag(F_INTERRUPT, true);
+        self.regs.pc = self.load_word(BRK_VECTOR);
     }
 }
 
