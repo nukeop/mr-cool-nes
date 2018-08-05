@@ -1,4 +1,4 @@
-# mr-cool-nes ![Travis (.org)](https://img.shields.io/travis/nukeop/mr-cool-nes.svg?style=for-the-badge)
+# mr-cool-nes ![Travis (.org)](https://img.shields.io/travis/nukeop/mr-cool-nes.svg?style=for-the-badge) [![Codecov](https://img.shields.io/codecov/c/github/codecov/example-python.svg?style=for-the-badge)](https://codecov.io/gh/nukeop/mr-cool-nes)
 NES emulator (in development)
 
 ## Getting started
