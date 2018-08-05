@@ -81,4 +81,61 @@ mod ppu_tests {
         ppu.store_byte(0x2007, 0xDD);
         assert_eq!(ppu.regs.ppu_data, 0xDD);
     }
+
+    #[test]
+    fn load_byte_ppu_ctrl() {
+        let mut ppu = setup_ppu();
+        ppu.regs.ppu_ctrl = 0xDD;
+        assert_eq!(ppu.load_byte(0x2000), 0xDD);
+    }
+
+    #[test]
+    fn load_byte_ppu_mask() {
+        let mut ppu = setup_ppu();
+        ppu.regs.ppu_mask = 0xDD;
+        assert_eq!(ppu.load_byte(0x2001), 0xDD);
+    }
+
+    #[test]
+    fn load_byte_ppu_status() {
+        let mut ppu = setup_ppu();
+        ppu.regs.ppu_status = 0xDD;
+        assert_eq!(ppu.load_byte(0x2002), 0xDD);
+    }
+
+    #[test]
+    fn load_byte_oam_addr() {
+        let mut ppu = setup_ppu();
+        ppu.regs.oam_addr = 0xDD;
+        assert_eq!(ppu.load_byte(0x2003), 0x00);
+    }
+
+    #[test]
+    fn load_byte_oam_data() {
+        let mut ppu = setup_ppu();
+        ppu.regs.oam_data = 0xDD;
+        assert_eq!(ppu.load_byte(0x2004), 0xDD);
+    }
+
+    #[test]
+    fn load_byte_ppu_scroll() {
+        let mut ppu = setup_ppu();
+        ppu.regs.ppu_scroll = 0xDD;
+        assert_eq!(ppu.load_byte(0x2005), 0x00);
+    }
+
+    #[test]
+    fn load_byte_ppu_addr() {
+        let mut ppu = setup_ppu();
+        ppu.regs.ppu_addr = 0xDD;
+        assert_eq!(ppu.load_byte(0x2006), 0x00);
+    }
+
+    #[test]
+    fn load_byte_ppu_data() {
+        let mut ppu = setup_ppu();
+        ppu.regs.ppu_data = 0xDD;
+        assert_eq!(ppu.load_byte(0x2007), 0xDD);
+    }
+    
 }
