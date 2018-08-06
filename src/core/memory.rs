@@ -6,7 +6,8 @@ pub trait Memory {
     fn store_byte(&mut self, addr: u16, val: u8);
 
     fn load_word(&mut self, addr: u16) -> u16 {
-        self.load_byte(addr) as u16 | self.load_byte(addr + 1) as u16
+        self.load_byte(addr) as u16 | (self.load_byte(addr + 1) as
+        u16) << 8
     }
     
     fn store_word(&mut self, addr: u16, val: u16) {
