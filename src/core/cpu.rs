@@ -113,6 +113,9 @@ impl CPU {
         match opcode {
             0x00 => self.brk(),
             0xE3 => self.noop(), // Unofficial opcode
+            0x78 => self.sei(),
+            0xD8 => self.cld(),
+            0xA2 => self.ldx(ImmediateAddressingMode),
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
@@ -125,6 +128,12 @@ impl CPU {
         }
     }
 
+    fn set_zn(&mut self, val: u8) -> u8 {
+        self.set_flag(F_ZERO, val == 0);
+        self.set_flag(F_NEGATIVE, (val & 0x80) != 0);
+        val
+    }
+
     fn noop(&self) {}
 
     fn brk(&mut self) {
@@ -135,6 +144,19 @@ impl CPU {
         self.push_byte(p);
         self.set_flag(F_INTERRUPT, true);
         self.regs.pc = self.load_word(BRK_VECTOR);
+    }
+
+    fn sei(&mut self) {
+        self.set_flag(F_INTERRUPT, true);
+    }
+
+    fn cld(&mut self) {
+        self.set_flag(F_DECIMAL, false);
+    }
+
+    fn ldx<M: AddressingMode>(&mut self, mode: M) {
+        let val = mode.load(self);
+        self.regs.x = self.set_zn(val);
     }
 }
 
