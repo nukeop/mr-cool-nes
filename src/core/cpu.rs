@@ -28,8 +28,20 @@ impl AddressingMode for AccumulatorAddressingMode {
 
 struct ImmediateAddressingMode;
 impl AddressingMode for ImmediateAddressingMode {
-    fn load(&self, cpu: &mut CPU) -> u8 { 0x00 }
-    fn store(&self, cpu: &mut CPU, val: u8) {}
+    fn load(&self, cpu: &mut CPU) -> u8 { cpu.load_byte_increment_pc() }
+    fn store(&self, cpu: &mut CPU, val: u8) { panic!("Attempted write with immediate addressing mode") }
+}
+
+struct AbsoluteAddressingMode;
+impl AddressingMode for AbsoluteAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 {
+        let addr = cpu.load_word_increment_pc();
+        cpu.load_byte(addr)
+    }
+    fn store(&self, cpu: &mut CPU, val: u8) {
+        let addr = cpu.load_word_increment_pc();
+        cpu.store_byte(addr, val);
+    }
 }
 
 pub struct Registers {
@@ -101,6 +113,20 @@ impl CPU {
         self.regs.s -= 2;
     }
 
+    pub fn load_byte_increment_pc(&mut self) -> u8 {
+        let pc = self.regs.pc;
+        let val = self.load_byte(pc);
+        self.regs.pc += 1;
+        val
+    }
+
+    pub fn load_word_increment_pc(&mut self) -> u16 {
+        let pc = self.regs.pc;
+        let val = self.load_word(pc);
+        self.regs.pc += 2;
+        val
+    }
+
     pub fn step(&mut self) {
         let pc = self.regs.pc;
         let next = self.load_byte(pc);
@@ -116,6 +142,7 @@ impl CPU {
             0x78 => self.sei(),
             0xD8 => self.cld(),
             0xA2 => self.ldx(ImmediateAddressingMode),
+            0x4D => self.eor(AbsoluteAddressingMode),
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
@@ -157,6 +184,11 @@ impl CPU {
     fn ldx<M: AddressingMode>(&mut self, mode: M) {
         let val = mode.load(self);
         self.regs.x = self.set_zn(val);
+    }
+
+    fn eor<M: AddressingMode>(&mut self, mode: M) {
+        let result = mode.load(self) ^ self.regs.a;
+        self.regs.a = self.set_zn(result);
     }
 }
 
