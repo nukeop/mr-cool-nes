@@ -1,6 +1,7 @@
 use core::rom::Rom;
 
 pub trait Mapper {
+    fn type_of(&self) -> String;
     fn load_prg_byte(&self, addr: u16) -> u8;
     fn load_chr_byte(&self, addr: u16) -> u8;
     fn store_prg_byte(&self, addr: u16, val: u8);
@@ -13,6 +14,7 @@ pub fn select_mapper(rom: Rom) -> Box<Mapper> {
     
     match mapper_number {
         0 => Box::new(NROM::new(rom)) as Box<Mapper>,
+        1 => Box::new(SxROM::new(rom)) as Box<Mapper>,
         _ => panic!("Unimplemented mapper: {:X}", mapper_number)
     }
 }
@@ -30,6 +32,10 @@ impl NROM {
 }
 
 impl Mapper for NROM {
+    fn type_of(&self) -> String {
+        "NROM".to_string()
+    }
+    
     fn load_prg_byte(&self, addr: u16) -> u8 {
         if addr < 0x8000 {
             0
@@ -83,6 +89,10 @@ impl SxROM {
 }
 
 impl Mapper for SxROM {
+    fn type_of(&self) -> String {
+        "SxROM".to_string()
+    }
+    
     fn load_prg_byte(&self, addr: u16) -> u8 {
         0x00
     }
