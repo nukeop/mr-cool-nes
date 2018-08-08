@@ -1,7 +1,7 @@
 extern crate mr_cool_nes;
 
 #[cfg(test)]
-mod ppu_tests {
+mod cpu_tests {
     use mr_cool_nes::core::cpu::*;
     use mr_cool_nes::core::ppu::PPU;
     use mr_cool_nes::core::memory::{Memory, RAM};
@@ -29,6 +29,14 @@ mod ppu_tests {
         let ppu = PPU::new();
         let mapper = NROM::new(rom);
         CPU::new(ppu, ram, Box::new(mapper))
+    }
+
+    #[test]
+    fn load_byte_ram() {
+        let mut cpu = setup_cpu();
+        cpu.mem_map.ram.mem[0xFF] = 0xDD;
+        let byte = cpu.load_byte(0xFF);
+        assert_eq!(byte, 0xDD);
     }
 
     #[test]
@@ -115,6 +123,51 @@ mod ppu_tests {
     fn set_flag_negative() {
         let mut cpu = setup_cpu();
         cpu.set_flag(F_NEGATIVE, true);
+        assert_eq!(cpu.regs.p & 0x80, 0x80);
+    }
+
+    #[test]
+    fn load_byte_increment_pc() {
+        let mut cpu = setup_cpu();
+        let pc = cpu.regs.pc;
+        cpu.mem_map.ram.mem[pc as usize] = 0xDD;
+        let byte = cpu.load_byte_increment_pc();
+        assert_eq!(byte, 0xDD);
+        assert_eq!(cpu.regs.pc, pc+1);
+    }
+
+    #[test]
+    fn load_word_increment_pc() {
+        let mut cpu = setup_cpu();
+        let pc = cpu.regs.pc;
+        cpu.mem_map.ram.mem[pc as usize] = 0xAD;
+        cpu.mem_map.ram.mem[(pc+1) as usize] = 0xDE;
+        let word = cpu.load_word_increment_pc();
+        assert_eq!(word, 0xDEAD);
+        assert_eq!(cpu.regs.pc, pc+2);
+    }
+
+    #[test]
+    fn set_zn_zero() {
+        let mut cpu = setup_cpu();
+        cpu.set_zn(0);
+        assert_eq!(cpu.regs.p & 0x02, 0x02);
+        assert_eq!(cpu.regs.p & 0x80, 0);
+    }
+
+    #[test]
+    fn set_zn_nonzero() {
+        let mut cpu = setup_cpu();
+        cpu.set_zn(0x40);
+        assert_eq!(cpu.regs.p & 0x02, 0);
+        assert_eq!(cpu.regs.p & 0x80, 0);
+    }
+
+    #[test]
+    fn set_zn_negative() {
+        let mut cpu = setup_cpu();
+        cpu.set_zn(0xA0);
+        assert_eq!(cpu.regs.p & 0x02, 0);
         assert_eq!(cpu.regs.p & 0x80, 0x80);
     }
 }

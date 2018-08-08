@@ -155,7 +155,7 @@ impl CPU {
         }
     }
 
-    fn set_zn(&mut self, val: u8) -> u8 {
+    pub fn set_zn(&mut self, val: u8) -> u8 {
         self.set_flag(F_ZERO, val == 0);
         self.set_flag(F_NEGATIVE, (val & 0x80) != 0);
         val
