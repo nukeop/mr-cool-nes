@@ -142,6 +142,7 @@ impl CPU {
             0x78 => self.sei(),
             0xD8 => self.cld(),
             0xA2 => self.ldx(ImmediateAddressingMode),
+            0x4C => self.jmp(),
             0x4D => self.eor(AbsoluteAddressingMode),
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
@@ -189,6 +190,12 @@ impl CPU {
     fn eor<M: AddressingMode>(&mut self, mode: M) {
         let result = mode.load(self) ^ self.regs.a;
         self.regs.a = self.set_zn(result);
+    }
+
+    fn jmp(&mut self) {
+        let addr = self.load_word_increment_pc();
+        let operand = self.load_word(addr);
+        self.regs.pc = operand;
     }
 }
 
