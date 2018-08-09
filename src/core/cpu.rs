@@ -44,6 +44,20 @@ impl AddressingMode for AbsoluteAddressingMode {
     }
 }
 
+struct IndexedIndirectAddressingMode;
+impl AddressingMode for IndexedIndirectAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 {
+        let addr = cpu.load_byte_increment_pc();
+        let x = cpu.regs.x;
+        let real_addr = cpu.load_word_zeropage_wraparound(addr + x);
+        cpu.load_byte(real_addr)
+    }
+
+    fn store(&self, cpu: &mut CPU, val: u8) {
+        
+    }
+}
+
 pub struct Registers {
     pub a: u8,
     pub x: u8,
@@ -144,6 +158,7 @@ impl CPU {
             0xA2 => self.ldx(ImmediateAddressingMode),
             0x4C => self.jmp(),
             0x4D => self.eor(AbsoluteAddressingMode),
+            0x21 => self.and(IndexedIndirectAddressingMode),
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
@@ -196,6 +211,11 @@ impl CPU {
         let addr = self.load_word_increment_pc();
         let operand = self.load_word(addr);
         self.regs.pc = operand;
+    }
+
+    fn and<M: AddressingMode>(&mut self, mode: M) {
+        let val = mode.load(self) & self.regs.a;
+        self.set_zn(val);
     }
 }
 

@@ -38,4 +38,40 @@ mod memory_tests {
         let b = ram.load_byte(0x0A4F);
         assert_eq!(b, 0x91);
     }
+
+    #[test]
+    fn load_word_ram() {
+        let mut ram = setup_memory();
+        ram.mem[0x0200] = 0xAD;
+        ram.mem[0x0201] = 0xDE;
+        let w = ram.load_word(0x0200);
+        assert_eq!(w, 0xDEAD);
+    }
+
+    #[test]
+    fn store_word_ram() {
+        let mut ram = setup_memory();
+        ram.store_word(0x0200, 0xDEAD);
+        assert_eq!(ram.mem[0x0200], 0xAD);
+        assert_eq!(ram.mem[0x0201], 0xDE);
+    }
+
+    #[test]
+    fn load_word_zeropage_no_wraparound() {
+        let mut ram = setup_memory();
+        ram.mem[0x10] = 0xAD;
+        ram.mem[0x11] = 0xDE;
+        let w = ram.load_word_zeropage_wraparound(0x10);
+        assert_eq!(w, 0xDEAD);
+    }
+
+    #[test]
+    fn load_word_zeropage_wraparound() {
+        let mut ram = setup_memory();
+        ram.mem[0xFF] = 0xAD;
+        ram.mem[0x00] = 0xDE;
+        
+        let w = ram.load_word_zeropage_wraparound(0xFF);
+        assert_eq!(w, 0xDEAD);
+    }
 }
