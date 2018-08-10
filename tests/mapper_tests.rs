@@ -18,8 +18,8 @@ mod mapper_tests {
                 flags_10: 0,
                 zero: [0; 5]
             },
-            prg_rom: vec![0; 16384],
-            chr_rom: vec![0; 16384]
+            prg_rom: vec![0; 0x4000],
+            chr_rom: vec![0; 0x4000]
         }
     }
 
@@ -39,6 +39,14 @@ mod mapper_tests {
     }
 
     #[test]
+    #[should_panic]
+    fn select_mapper_panic() {
+        let mut rom = setup_rom();
+        rom.header.flags_6 = 0xFF;
+        select_mapper(rom);
+    }
+
+    #[test]
     fn nrom_load_prg_byte() {
         let mut rom = setup_rom();
         rom.prg_rom[0xDE] = 0xAD;
@@ -53,6 +61,25 @@ mod mapper_tests {
         rom.chr_rom[0xDE] = 0xAD;
         let mapper = select_mapper(rom);
         let byte = mapper.load_chr_byte(0xDE);
+        assert_eq!(byte, 0xAD);
+    }
+
+    #[test]
+    fn nrom_load_prg_byte_zero() {
+        let mut rom = setup_rom();
+        rom.prg_rom[0xDE] = 0xAD;
+        let mapper = select_mapper(rom);
+        let byte = mapper.load_prg_byte(0xDE);
+        assert_eq!(byte, 0x00);
+    }
+
+    #[test]
+    fn nrom_load_prg_byte_long_mem() {
+        let mut rom = setup_rom();
+        rom.prg_rom = vec![0; 0x8000];
+        rom.prg_rom[0xDE] = 0xAD;
+        let mapper = select_mapper(rom);
+        let byte = mapper.load_prg_byte(0x80DE);
         assert_eq!(byte, 0xAD);
     }
 }
