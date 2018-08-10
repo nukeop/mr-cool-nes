@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use clap::{App, Arg};
+use clap::{App, Arg, ArgMatches};
 use core;
 use core::mapper;
 use emu_config::EmuConfig;
 use renderer::Renderer;
 
-pub fn read_cl_args<'a>() -> HashMap<String, String> {
+pub fn read_cl_args<'a>() -> ArgMatches<'a> {
     let matches = App::new("mr-cool-nes")
         .version("0.1.0")
         .about("nes emulator")
@@ -20,17 +20,18 @@ pub fn read_cl_args<'a>() -> HashMap<String, String> {
              .long("config")
              .value_name("FILE")
              .help("Optional custom config file"))
+        .arg(Arg::with_name("headless")
+             .short("h")
+             .long("headless")
+             .help("Run without graphics"))
         .get_matches();
 
     let rom = matches.value_of("rom").unwrap_or("rom.nes").to_owned();
     let config = matches.value_of("config").unwrap_or(".mrcoolnes").to_owned();
-    let mut result: HashMap<String, String> = HashMap::new();
-    result.insert("rom".to_owned(), rom);
-    result.insert("config".to_owned(), config);
-    result
+    matches
 }
 
-pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String) {
+pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String, headless: bool) {
     info!("Initializing the emulator");    
     let mapper = mapper::select_mapper(rom);
     let ppu = core::ppu::PPU::new();
@@ -41,7 +42,7 @@ pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String) {
         .ppu(ppu)
         .cpu(cpu)
         .finalize();
-
+    
     nes.cpu.reset();
     
     let mut renderer = Renderer::new(config, rom_path);

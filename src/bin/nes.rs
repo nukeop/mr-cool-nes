@@ -13,14 +13,15 @@ fn main() {
     info!("Mr. Cool NES starting up...");
     
     let args = read_cl_args();
-    let config_path = args.get("config").unwrap();
-    let rom_path = args.get("rom").unwrap();
+    let config_path = args.value_of("config").unwrap_or(".mrcoolnes").to_owned();
+    let rom_path = args.value_of("rom").unwrap_or("rom.nes").to_owned();
+    let headless = args.is_present("headless");
 
     info!("Loading a config file from: {}", config_path);
-    let config = EmuConfig::from_path(config_path);
+    let config = EmuConfig::from_path(&config_path);
     
     info!("Loading a ROM from: {}", rom_path);
-    let rom = rom::Rom::load(rom_path).unwrap();
+    let rom = rom::Rom::load(&rom_path).unwrap();
 
-    start(rom, config, rom_path);
+    start(rom, config, &rom_path, headless);
 }
