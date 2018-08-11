@@ -31,7 +31,7 @@ pub fn read_cl_args<'a>() -> ArgMatches<'a> {
     matches
 }
 
-pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String, headless: bool) {
+pub fn start<R: Renderer>(rom: core::rom::Rom, config: EmuConfig, rom_path: &String, mut renderer: Box<R>) {
     info!("Initializing the emulator");    
     let mapper = mapper::select_mapper(rom);
     let ppu = core::ppu::PPU::new();
@@ -45,6 +45,5 @@ pub fn start(rom: core::rom::Rom, config: EmuConfig, rom_path: &String, headless
     
     nes.cpu.reset();
     
-    let mut renderer = Renderer::new(config, rom_path);
     renderer.start_loop(|| nes.cpu.step());
 }

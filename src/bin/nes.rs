@@ -6,6 +6,8 @@ extern crate mr_cool_nes;
 
 use mr_cool_nes::init::{read_cl_args, start};
 use mr_cool_nes::emu_config::EmuConfig;
+use mr_cool_nes::renderer::Renderer;
+use mr_cool_nes::sdl_renderer::SDLRenderer;
 use mr_cool_nes::core::rom;
 
 fn main() {
@@ -23,5 +25,10 @@ fn main() {
     info!("Loading a ROM from: {}", rom_path);
     let rom = rom::Rom::load(&rom_path).unwrap();
 
-    start(rom, config, &rom_path, headless);
+    let renderer = Box::new(SDLRenderer::new(&config, &rom_path));
+    if(headless) {
+        
+    }
+    
+    start(rom, config, &rom_path, renderer);
 }
