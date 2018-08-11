@@ -42,6 +42,18 @@ Rust makes this very easy.
 $ cargo test
 ```
 
+## Running roms
+
+You can either use a headless renderer (for tests) or an SDL renderer.
+The headless renderer doesn't create a window and emulates the NES without a visible output.
+
+To run with the SDL renderer:
+```bash
+$ RUST_LOG=nes=info,mr_cool_nes=info cargo run -- --rom tests/roms/cpu_exec_space/test_cpu_exec_space_ppuio.nes
+```
+
+To run with the headless renderer, use the `--headless` flag.
+
 ## Contributing
 
 All contributions are welcome. I'm not very good at Rust so if there's something I should be doing better, let me know.
