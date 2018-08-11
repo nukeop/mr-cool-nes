@@ -8,6 +8,7 @@ use mr_cool_nes::init::{read_cl_args, start};
 use mr_cool_nes::emu_config::EmuConfig;
 use mr_cool_nes::renderer::Renderer;
 use mr_cool_nes::sdl_renderer::SDLRenderer;
+use mr_cool_nes::headless_renderer::HeadlessRenderer;
 use mr_cool_nes::core::rom;
 
 fn main() {
@@ -25,10 +26,11 @@ fn main() {
     info!("Loading a ROM from: {}", rom_path);
     let rom = rom::Rom::load(&rom_path).unwrap();
 
-    let renderer = Box::new(SDLRenderer::new(&config, &rom_path));
     if(headless) {
-        
+        let headless_renderer = Box::new(HeadlessRenderer::new(&rom_path));
+        start(rom, config, &rom_path, headless_renderer)
+    } else {
+        let sdl_renderer = Box::new(SDLRenderer::new(&config, &rom_path));
+        start(rom, config, &rom_path, sdl_renderer);       
     }
-    
-    start(rom, config, &rom_path, renderer);
 }

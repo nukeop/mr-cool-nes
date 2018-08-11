@@ -11,3 +11,4 @@ pub mod font_map;
 pub mod init;
 pub mod renderer;
 pub mod sdl_renderer;
+pub mod headless_renderer;
