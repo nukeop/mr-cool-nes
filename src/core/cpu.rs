@@ -44,6 +44,18 @@ impl AddressingMode for AbsoluteAddressingMode {
     }
 }
 
+struct AbsoluteYAddressingMode;
+impl AddressingMode for AbsoluteYAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 {
+        let addr = cpu.load_word_increment_pc() + cpu.regs.y as u16;
+        cpu.load_byte(addr)
+    }
+    fn store(&self, cpu: &mut CPU, val: u8) {
+        let addr = cpu.load_word_increment_pc() + cpu.regs.y as u16;
+        cpu.store_byte(addr, val);
+    }
+}
+
 struct IndexedIndirectAddressingMode;
 impl AddressingMode for IndexedIndirectAddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8 {
@@ -173,6 +185,16 @@ impl CPU {
             0x4D => self.eor(AbsoluteAddressingMode),
             0x21 => self.and(IndexedIndirectAddressingMode),
             0x05 => self.ora(ZeroPageAddressingMode),
+            0x01 => self.ora(IndexedIndirectAddressingMode),
+            0x19 => self.ora(AbsoluteYAddressingMode),
+            0x02 => self.hlt(),
+            0x85 => self.sta(ZeroPageAddressingMode),
+            0xA9 => self.lda(ImmediateAddressingMode),
+            0x48 => self.pha(),
+            0x20 => self.jsr(),
+            0x9A => self.txs(),
+            0x8D => self.sta(AbsoluteAddressingMode),
+            0xAD => self.lda(AbsoluteAddressingMode),
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
@@ -229,12 +251,44 @@ impl CPU {
 
     fn and<M: AddressingMode>(&mut self, mode: M) {
         let val = mode.load(self) & self.regs.a;
-        self.set_zn(val);
+        self.regs.a = self.set_zn(val);
     }
 
     fn ora<M: AddressingMode>(&mut self, mode: M) {
         let val = mode.load(self) | self.regs.a;
-        self.set_zn(val);
+        self.regs.a = self.set_zn(val);
+    }
+
+    fn hlt(&mut self) {
+        info!("Halt instruction executed, reset required");
+    }
+
+    fn sta<M: AddressingMode>(&mut self, mode: M) {
+        let a = self.regs.a;
+        mode.store(self, a);
+    }
+
+    fn lda<M: AddressingMode>(&mut self, mode: M) {
+        let val = mode.load(self);
+        self.regs.a = self.set_zn(val);
+    }
+
+    fn pha(&mut self) {
+        let a = self.regs.a;
+        self.push_byte(a);
+    }
+
+    fn jsr(&mut self) {
+        let addr = self.load_word_increment_pc();
+        let pc = self.regs.pc;
+        self.push_word(pc - 1);
+        self.regs.pc = addr;
+        info!("address: {:X}, pc: {:X}, current pc: {:X}", addr, pc, self.regs.pc);
+    }
+
+    fn txs(&mut self) {
+        let x = self.regs.x;
+        self.regs.s = self.set_zn(x);
     }
 }
 
