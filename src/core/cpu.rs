@@ -15,24 +15,24 @@ pub const F_BREAK: u8 = 0x10;
 pub const F_OVERFLOW: u8 = 0x40;
 pub const F_NEGATIVE: u8 = 0x80;
 
-trait AddressingMode {
+pub trait AddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8;
     fn store(&self, cpu: &mut CPU, val: u8);
 }
 
-struct AccumulatorAddressingMode;
+pub struct AccumulatorAddressingMode;
 impl AddressingMode for AccumulatorAddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8 { cpu.regs.a }
     fn store(&self, cpu: &mut CPU, val: u8) { cpu.regs.a = val; }
 }
 
-struct ImmediateAddressingMode;
+pub struct ImmediateAddressingMode;
 impl AddressingMode for ImmediateAddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8 { cpu.load_byte_increment_pc() }
     fn store(&self, cpu: &mut CPU, val: u8) { panic!("Attempted write with immediate addressing mode") }
 }
 
-struct AbsoluteAddressingMode;
+pub struct AbsoluteAddressingMode;
 impl AddressingMode for AbsoluteAddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8 {
         let addr = cpu.load_word_increment_pc();
@@ -44,7 +44,7 @@ impl AddressingMode for AbsoluteAddressingMode {
     }
 }
 
-struct AbsoluteYAddressingMode;
+pub struct AbsoluteYAddressingMode;
 impl AddressingMode for AbsoluteYAddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8 {
         let addr = cpu.load_word_increment_pc() + cpu.regs.y as u16;
@@ -56,7 +56,19 @@ impl AddressingMode for AbsoluteYAddressingMode {
     }
 }
 
-struct IndexedIndirectAddressingMode;
+pub struct AbsoluteXAddressingMode;
+impl AddressingMode for AbsoluteXAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 {
+        let addr = cpu.load_word_increment_pc() + cpu.regs.x as u16;
+        cpu.load_byte(addr)
+    }
+    fn store(&self, cpu: &mut CPU, val: u8) {
+        let addr = cpu.load_word_increment_pc() + cpu.regs.x as u16;
+        cpu.store_byte(addr, val);
+    }
+}
+
+pub struct IndexedIndirectAddressingMode;
 impl AddressingMode for IndexedIndirectAddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8 {
         let addr = cpu.load_byte_increment_pc();
@@ -70,7 +82,7 @@ impl AddressingMode for IndexedIndirectAddressingMode {
     }
 }
 
-struct ZeroPageAddressingMode;
+pub struct ZeroPageAddressingMode;
 impl AddressingMode for ZeroPageAddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8 {
         let addr = cpu.load_byte_increment_pc();
@@ -83,15 +95,15 @@ impl AddressingMode for ZeroPageAddressingMode {
     }
 }
 
-struct ZeroPageXAddressingMode;
+pub struct ZeroPageXAddressingMode;
 impl AddressingMode for ZeroPageXAddressingMode {
     fn load(&self, cpu: &mut CPU) -> u8 {
-        let addr = cpu.load_byte_increment_pc() + cpu.regs.x;
+        let addr = (cpu.load_byte_increment_pc() as u16 + cpu.regs.x as u16) % 256;
         cpu.load_byte(addr as u16)
     }
 
     fn store(&self, cpu: &mut CPU, val: u8) {
-        let addr = cpu.load_byte_increment_pc() + cpu.regs.x;
+        let addr = (cpu.load_byte_increment_pc() as u16 + cpu.regs.x as u16) % 256;
         cpu.store_byte(addr as u16, val);
     }
 }
@@ -206,11 +218,16 @@ impl CPU {
             0x8D => self.sta(AbsoluteAddressingMode),
             0x95 => self.sta(ZeroPageXAddressingMode),
             0x9A => self.txs(),
+            0x9D => self.sta(AbsoluteXAddressingMode),
             0xA2 => self.ldx(ImmediateAddressingMode),
             0xA9 => self.lda(ImmediateAddressingMode),
             0xAD => self.lda(AbsoluteAddressingMode),
+            0xBD => self.lda(AbsoluteXAddressingMode),
+            0xD0 => self.bne(),
             0xD8 => self.cld(),
+            0xDD => self.cmp(AbsoluteXAddressingMode),
             0xE3 => self.noop(), // Unofficial opcode
+            0xE8 => self.inx(),
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
@@ -238,6 +255,13 @@ impl CPU {
         if(condition) {
             self.regs.pc = (self.regs.pc as i32 + offset as i32) as u16;
         }
+    }
+
+    pub fn compare<M: AddressingMode>(&mut self, register: u8, mode: M) {
+        let val = mode.load(self);
+        let result = (register as i32 - val as i32);
+        self.set_flag(F_CARRY, register >= val);
+        self.set_zn(result as u8);
     }
     
     fn noop(&self) {}
@@ -326,6 +350,21 @@ impl CPU {
     fn bpl(&mut self) {
         let flag = self.get_flag(F_NEGATIVE);
         self.branch(flag);
+    }
+
+    fn inx(&mut self) {
+        let x = self.regs.x;
+        self.regs.x = self.set_zn(x + 1);
+    }
+
+    fn bne(&mut self) {
+        let flag = self.get_flag(F_ZERO);
+        self.branch(flag);
+    }
+
+    fn cmp<M: AddressingMode>(&mut self, mode: M) {
+        let a = self.regs.a;
+        self.compare(a, mode);
     }
 }
 

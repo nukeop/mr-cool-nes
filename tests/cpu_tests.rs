@@ -8,8 +8,8 @@ mod cpu_tests {
     use mr_cool_nes::core::rom::{INesHeader, Rom};
     use mr_cool_nes::core::mapper::NROM;
 
-    fn setup_cpu() -> CPU {
-        let rom = Rom {
+    fn setup_rom() -> Rom {
+        Rom {
             header: INesHeader {
                 magic: ['N' as u8, 'E' as u8, 'S' as u8, '\x1a' as u8],
                 prg_rom_size: 1,
@@ -23,8 +23,11 @@ mod cpu_tests {
             },
             prg_rom: vec![0; 16384],
             chr_rom: vec![0; 16384]
-        };
-        
+        }
+    }
+    
+    fn setup_cpu() -> CPU {
+        let rom = setup_rom();        
         let ram = RAM::new();
         let ppu = PPU::new();
         let mapper = NROM::new(rom);
@@ -169,5 +172,88 @@ mod cpu_tests {
         cpu.set_zn(0xA0);
         assert_eq!(cpu.regs.p & 0x02, 0);
         assert_eq!(cpu.regs.p & 0x80, 0x80);
+    }
+
+    #[test]
+    fn cpu_reset() {
+        let mut rom = setup_rom();
+        
+        let ram = RAM::new();
+        let ppu = PPU::new();
+        
+        rom.prg_rom[0xFFFC & 0x3FFF] = 0xAD;
+        rom.prg_rom[(0xFFFC + 1 )& 0x3FFF] = 0xDE;
+
+        let mapper = NROM::new(rom);
+        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        
+        cpu.reset();
+        assert_eq!(cpu.regs.pc, 0xDEAD);
+    }
+
+    #[test]
+    fn compare_greater() {
+        let mut rom = setup_rom();
+
+        let mut ram = RAM::new();
+        let ppu = PPU::new();
+        
+        rom.prg_rom[0xFFFC & 0x3FFF] = 0x00;
+        ram.mem[0x00] = 0x10;
+
+        let mapper = NROM::new(rom);
+        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        cpu.regs.a = 0x00;
+        
+        cpu.reset();
+        let a  = cpu.regs.a;
+        cpu.compare(a, ImmediateAddressingMode);
+        assert_eq!(cpu.get_flag(F_CARRY), false);
+        assert_eq!(cpu.get_flag(F_ZERO), false);
+        assert_eq!(cpu.get_flag(F_NEGATIVE), true);
+    }
+
+    #[test]
+    fn compare_less() {
+        let mut rom = setup_rom();
+
+        let mut ram = RAM::new();
+        let ppu = PPU::new();
+        
+        rom.prg_rom[0xFFFC & 0x3FFF] = 0x00;
+        ram.mem[0x00] = 0x10;
+
+        let mapper = NROM::new(rom);
+        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        cpu.regs.a = 0x20;
+        
+        cpu.reset();
+        let a  = cpu.regs.a;
+        cpu.compare(a, ImmediateAddressingMode);
+        assert_eq!(cpu.get_flag(F_CARRY), true);
+        assert_eq!(cpu.get_flag(F_ZERO), false);
+        assert_eq!(cpu.get_flag(F_NEGATIVE), false);
+    }
+
+    #[test]
+    fn compare_zero() {
+        let mut rom = setup_rom();
+
+        let mut ram = RAM::new();
+        let ppu = PPU::new();
+        
+        rom.prg_rom[0xFFFC & 0x3FFF] = 0x00;
+        ram.mem[0x00] = 0x10;
+
+        let mapper = NROM::new(rom);
+        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        cpu.regs.a = 0x10;
+        
+        cpu.reset();
+        let a  = cpu.regs.a;
+        cpu.compare(a, ImmediateAddressingMode);
+        assert_eq!(cpu.get_flag(F_CARRY), true);
+        assert_eq!(cpu.get_flag(F_ZERO), true);
+        assert_eq!(cpu.get_flag(F_NEGATIVE), false);
     }
 }
