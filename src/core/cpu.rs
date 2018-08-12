@@ -83,6 +83,19 @@ impl AddressingMode for ZeroPageAddressingMode {
     }
 }
 
+struct ZeroPageXAddressingMode;
+impl AddressingMode for ZeroPageXAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 {
+        let addr = cpu.load_byte_increment_pc() + cpu.regs.x;
+        cpu.load_byte(addr as u16)
+    }
+
+    fn store(&self, cpu: &mut CPU, val: u8) {
+        let addr = cpu.load_byte_increment_pc() + cpu.regs.x;
+        cpu.store_byte(addr as u16, val);
+    }
+}
+
 pub struct Registers {
     pub a: u8,
     pub x: u8,
@@ -177,26 +190,33 @@ impl CPU {
     pub fn decode(&mut self, opcode: u8) {
         match opcode {
             0x00 => self.brk(),
-            0xE3 => self.noop(), // Unofficial opcode
-            0x78 => self.sei(),
-            0xD8 => self.cld(),
-            0xA2 => self.ldx(ImmediateAddressingMode),
+            0x01 => self.ora(IndexedIndirectAddressingMode),
+            0x02 => self.hlt(),
+            0x05 => self.ora(ZeroPageAddressingMode),
+            0x10 => self.bpl(),
+            0x19 => self.ora(AbsoluteYAddressingMode),
+            0x20 => self.jsr(),
+            0x21 => self.and(IndexedIndirectAddressingMode),
+            0x48 => self.pha(),
             0x4C => self.jmp(),
             0x4D => self.eor(AbsoluteAddressingMode),
-            0x21 => self.and(IndexedIndirectAddressingMode),
-            0x05 => self.ora(ZeroPageAddressingMode),
-            0x01 => self.ora(IndexedIndirectAddressingMode),
-            0x19 => self.ora(AbsoluteYAddressingMode),
-            0x02 => self.hlt(),
+            0x78 => self.sei(),
             0x85 => self.sta(ZeroPageAddressingMode),
-            0xA9 => self.lda(ImmediateAddressingMode),
-            0x48 => self.pha(),
-            0x20 => self.jsr(),
-            0x9A => self.txs(),
+            0x8A => self.txa(),
             0x8D => self.sta(AbsoluteAddressingMode),
+            0x95 => self.sta(ZeroPageXAddressingMode),
+            0x9A => self.txs(),
+            0xA2 => self.ldx(ImmediateAddressingMode),
+            0xA9 => self.lda(ImmediateAddressingMode),
             0xAD => self.lda(AbsoluteAddressingMode),
+            0xD8 => self.cld(),
+            0xE3 => self.noop(), // Unofficial opcode
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
+    }
+
+    pub fn get_flag(&mut self, flag: u8) -> bool {
+        (self.regs.p & flag) > 0
     }
 
     pub fn set_flag(&mut self, flag: u8, state: bool) {
@@ -213,6 +233,13 @@ impl CPU {
         val
     }
 
+    pub fn branch(&mut self, condition: bool) {
+        let offset = self.load_byte_increment_pc() as i8;
+        if(condition) {
+            self.regs.pc = (self.regs.pc as i32 + offset as i32) as u16;
+        }
+    }
+    
     fn noop(&self) {}
 
     fn brk(&mut self) {
@@ -289,6 +316,16 @@ impl CPU {
     fn txs(&mut self) {
         let x = self.regs.x;
         self.regs.s = self.set_zn(x);
+    }
+
+    fn txa(&mut self) {
+        let x = self.regs.x;
+        self.regs.a = self.set_zn(x);
+    }
+
+    fn bpl(&mut self) {
+        let flag = self.get_flag(F_NEGATIVE);
+        self.branch(flag);
     }
 }
 
