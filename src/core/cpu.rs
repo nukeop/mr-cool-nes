@@ -161,7 +161,9 @@ impl CPU {
     }
 
     pub fn reset(&mut self) {
-        self.regs.pc = self.load_word(RESET_VECTOR);        
+        self.regs.pc = self.load_word(RESET_VECTOR);
+        self.regs.s -= 3;
+        self.regs.p |= 0x04;
         info!("Regs after reset: {}", self.regs);
     }
 

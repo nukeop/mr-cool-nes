@@ -15,7 +15,7 @@ pub fn select_mapper(rom: Rom) -> Box<Mapper> {
     match mapper_number {
         0 => Box::new(NROM::new(rom)) as Box<Mapper>,
         1 => Box::new(SxROM::new(rom)) as Box<Mapper>,
-        _ => panic!("Unimplemented mapper: {:X}", mapper_number)
+        _ => panic!("Unimplemented mapper: {}", mapper_number)
     }
 }
 
