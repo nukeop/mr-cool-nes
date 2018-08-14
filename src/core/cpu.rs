@@ -161,20 +161,36 @@ impl CPU {
     }
 
     pub fn reset(&mut self) {
-        self.regs.pc = self.load_word(RESET_VECTOR);
+        self.regs.pc = self.load_word(RESET_VECTOR);        
         info!("Regs after reset: {}", self.regs);
     }
 
     pub fn push_byte(&mut self, val: u8) {
         let s = self.regs.s;
         self.store_byte(0x100 + s as u16, val);
-        self.regs.s -= 1;
+
+        let mut temp_s = s-1;
+        temp_s = 0x0100 | (temp_s & 0xFF);
+        self.regs.s = temp_s;
     }
 
     pub fn push_word(&mut self, val: u16) {
         let s = self.regs.s;
         self.store_word(0x100 + (s - 1) as u16, val);
         self.regs.s -= 2;
+    }
+
+    pub fn pop_byte(&mut self) -> u8 {
+        self.regs.s += 1;
+        let s = self.regs.s;
+        self.load_byte(0x100 + s as u16)
+    }
+
+    pub fn pop_word(&mut self) -> u16 {
+        let s = self.regs.s;
+        let val = self.load_word(0x100 + s as u16 + 1);
+        self.regs.s += 2;
+        val
     }
 
     pub fn load_byte_increment_pc(&mut self) -> u8 {
@@ -193,10 +209,8 @@ impl CPU {
 
     pub fn step(&mut self) {
         let pc = self.regs.pc;
-        let next = self.load_byte(pc);
+        let next = self.load_byte_increment_pc();
         self.decode(next);
-        
-        self.regs.pc += 1;
     }
 
     pub fn decode(&mut self, opcode: u8) {
@@ -206,9 +220,16 @@ impl CPU {
             0x02 => self.hlt(),
             0x05 => self.ora(ZeroPageAddressingMode),
             0x10 => self.bpl(),
+            0x15 => self.ora(ZeroPageXAddressingMode),
             0x19 => self.ora(AbsoluteYAddressingMode),
             0x20 => self.jsr(),
             0x21 => self.and(IndexedIndirectAddressingMode),
+            0x24 => self.bit(ZeroPageAddressingMode),
+            0x26 => self.rol(ZeroPageAddressingMode),
+            0x2C => self.bit(AbsoluteAddressingMode),
+            0x40 => self.rti(),
+            0x41 => self.eor(IndexedIndirectAddressingMode),
+            0x44 => self.noop(),
             0x48 => self.pha(),
             0x4C => self.jmp(),
             0x4D => self.eor(AbsoluteAddressingMode),
@@ -226,8 +247,11 @@ impl CPU {
             0xD0 => self.bne(),
             0xD8 => self.cld(),
             0xDD => self.cmp(AbsoluteXAddressingMode),
-            0xE3 => self.noop(), // Unofficial opcode
+            0xE3 => self.noop(), // Illegal opcode
             0xE8 => self.inx(),
+            0xED => self.sbc(AbsoluteAddressingMode),
+            0xFC => self.noop(), // Illegal opcode
+            0xFF => self.noop(),   // Illegal opcode - ISC {adr} = INC {adr} + SBC {adr}
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
@@ -242,6 +266,10 @@ impl CPU {
         } else {
             self.regs.p &= !flag;
         }
+    }
+
+    pub fn set_flags(&mut self, flags: u8) {
+        self.regs.p = (flags | 0x30) - 0x10;
     }
 
     pub fn set_zn(&mut self, val: u8) -> u8 {
@@ -267,7 +295,7 @@ impl CPU {
     fn noop(&self) {}
 
     fn brk(&mut self) {
-        self.regs.pc += 2;
+        self.regs.pc += 1;
         let pc = self.regs.pc;
         let p = self.regs.p;
         self.push_word(pc);
@@ -334,7 +362,6 @@ impl CPU {
         let pc = self.regs.pc;
         self.push_word(pc - 1);
         self.regs.pc = addr;
-        info!("address: {:X}, pc: {:X}, current pc: {:X}", addr, pc, self.regs.pc);
     }
 
     fn txs(&mut self) {
@@ -365,6 +392,53 @@ impl CPU {
     fn cmp<M: AddressingMode>(&mut self, mode: M) {
         let a = self.regs.a;
         self.compare(a, mode);
+    }
+
+    fn sbc<M: AddressingMode>(&mut self, mode: M) {
+        let val = mode.load(self);
+        let a = self.regs.a;
+
+        let temp = a as i16 - val as i16 - (1 - (self.get_flag(F_CARRY) as i16));
+        self.set_flag(F_NEGATIVE, (temp >> 7) & 1 != 0);
+
+        // Not worth it to put this long condition into set_flag
+        if(((a ^ temp as u8) & 0x80) != 0 &&
+           ((a ^ val) & 0x80) != 0) {
+            self.set_flag(F_OVERFLOW, true);
+        } else {
+            self.set_flag(F_OVERFLOW, false);
+        }
+
+        self.set_flag(F_CARRY, temp < 0);
+        self.regs.a = temp as u8 & 0xff;
+        
+    }
+
+    fn rti(&mut self) {
+        let flags = self.pop_byte();
+        self.set_flags(flags);
+        self.regs.pc = self.pop_word();
+    }
+
+    fn bit<M: AddressingMode>(&mut self, mode: M) {
+        let val = mode.load(self);
+        let a = self.regs.a;
+        self.set_flag(F_ZERO, (val & a) == 0);
+        self.set_flag(F_NEGATIVE, (val & 0x80) != 0);
+        self.set_flag(F_OVERFLOW, (val & 0x40) != 0);
+    }
+
+    fn rol<M: AddressingMode>(&mut self, mode: M) {
+        let mut val = mode.load(self);
+        let carry = self.get_flag(F_CARRY);
+        let new_carry = (val & 0x80) > 0;
+        val = val << 1;
+        if(carry) {
+            val = val | 1;
+        }
+        self.set_flag(F_CARRY, new_carry);
+        val = self.set_zn(val);
+        mode.store(self, val);
     }
 }
 
