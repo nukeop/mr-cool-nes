@@ -69,16 +69,44 @@ impl AddressingMode for AbsoluteXAddressingMode {
 }
 
 pub struct IndexedIndirectAddressingMode;
-impl AddressingMode for IndexedIndirectAddressingMode {
-    fn load(&self, cpu: &mut CPU) -> u8 {
+impl IndexedIndirectAddressingMode {
+    fn addr(&self, cpu: &mut CPU) -> u16 {
         let addr = cpu.load_byte_increment_pc();
         let x = cpu.regs.x;
-        let real_addr = cpu.load_word_zeropage_wraparound(addr + x);
-        cpu.load_byte(real_addr)
+        cpu.load_word_zeropage_wraparound(addr + x)
+    }
+}
+
+impl AddressingMode for IndexedIndirectAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 {
+        let addr = self.addr(cpu);
+        cpu.load_byte(addr)
     }
 
     fn store(&self, cpu: &mut CPU, val: u8) {
-        
+        let addr = self.addr(cpu);
+        cpu.store_byte(addr, val)
+    }
+}
+
+pub struct IndirectIndexedAddressingMode;
+impl IndirectIndexedAddressingMode {
+    fn addr(&self, cpu: &mut CPU) -> u16 {
+        let addr = cpu.load_byte_increment_pc();
+        let y = cpu.regs.y;
+        cpu.load_word_zeropage_wraparound(addr) + y as u16
+    }
+}
+
+impl AddressingMode for IndirectIndexedAddressingMode {
+    fn load(&self, cpu: &mut CPU) -> u8 {
+        let addr = self.addr(cpu);
+        cpu.load_byte(addr)
+    }
+
+    fn store(&self, cpu: &mut CPU, val: u8) {
+        let addr = self.addr(cpu);
+        cpu.store_byte(addr, val);
     }
 }
 
@@ -171,9 +199,9 @@ impl CPU {
         let s = self.regs.s;
         self.store_byte(0x100 + s as u16, val);
 
-        let mut temp_s = s-1;
+        let mut temp_s: u16 = s as u16-1;
         temp_s = 0x0100 | (temp_s & 0xFF);
-        self.regs.s = temp_s;
+        self.regs.s = temp_s as u8;
     }
 
     pub fn push_word(&mut self, val: u16) {
@@ -221,7 +249,9 @@ impl CPU {
             0x01 => self.ora(IndexedIndirectAddressingMode),
             0x02 => self.hlt(),
             0x05 => self.ora(ZeroPageAddressingMode),
+            0x09 => self.ora(ImmediateAddressingMode),
             0x10 => self.bpl(),
+            0x11 => self.ora(IndirectIndexedAddressingMode),
             0x15 => self.ora(ZeroPageXAddressingMode),
             0x19 => self.ora(AbsoluteYAddressingMode),
             0x20 => self.jsr(),
@@ -235,6 +265,7 @@ impl CPU {
             0x48 => self.pha(),
             0x4C => self.jmp(),
             0x4D => self.eor(AbsoluteAddressingMode),
+            0x60 => self.rts(),
             0x78 => self.sei(),
             0x85 => self.sta(ZeroPageAddressingMode),
             0x8A => self.txa(),
@@ -242,18 +273,24 @@ impl CPU {
             0x95 => self.sta(ZeroPageXAddressingMode),
             0x9A => self.txs(),
             0x9D => self.sta(AbsoluteXAddressingMode),
+            0xA0 => self.ldy(ImmediateAddressingMode),
             0xA2 => self.ldx(ImmediateAddressingMode),
+            0xA5 => self.lda(ZeroPageAddressingMode),
             0xA9 => self.lda(ImmediateAddressingMode),
             0xAD => self.lda(AbsoluteAddressingMode),
             0xBD => self.lda(AbsoluteXAddressingMode),
+            0xC9 => self.cmp(ImmediateAddressingMode),
             0xD0 => self.bne(),
             0xD8 => self.cld(),
             0xDD => self.cmp(AbsoluteXAddressingMode),
             0xE3 => self.noop(), // Illegal opcode
             0xE8 => self.inx(),
             0xED => self.sbc(AbsoluteAddressingMode),
+            0xF0 => self.beq(),
+            0xFB => self.noop(), // Illegal opcode - rmw AbsoluteYAddressingMode
             0xFC => self.noop(), // Illegal opcode
-            0xFF => self.noop(),   // Illegal opcode - ISC {adr} = INC {adr} + SBC {adr}
+            0xFE => self.inc(AbsoluteXAddressingMode),
+            0xFF => self.noop(), // Illegal opcode - ISC {adr} = INC {adr} + SBC {adr}
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };
     }
@@ -302,7 +339,7 @@ impl CPU {
         let p = self.regs.p;
         self.push_word(pc);
         self.push_byte(p);
-        self.set_flag(F_INTERRUPT, true);
+        self.set_flag(F_BREAK, true);
         self.regs.pc = self.load_word(BRK_VECTOR);
     }
 
@@ -312,11 +349,6 @@ impl CPU {
 
     fn cld(&mut self) {
         self.set_flag(F_DECIMAL, false);
-    }
-
-    fn ldx<M: AddressingMode>(&mut self, mode: M) {
-        let val = mode.load(self);
-        self.regs.x = self.set_zn(val);
     }
 
     fn eor<M: AddressingMode>(&mut self, mode: M) {
@@ -354,6 +386,16 @@ impl CPU {
         self.regs.a = self.set_zn(val);
     }
 
+    fn ldx<M: AddressingMode>(&mut self, mode: M) {
+        let val = mode.load(self);
+        self.regs.x = self.set_zn(val);
+    }
+
+    fn ldy<M: AddressingMode>(&mut self, mode: M) {
+        let val = mode.load(self);
+        self.regs.y = self.set_zn(val);
+    }
+
     fn pha(&mut self) {
         let a = self.regs.a;
         self.push_byte(a);
@@ -378,7 +420,7 @@ impl CPU {
 
     fn bpl(&mut self) {
         let flag = self.get_flag(F_NEGATIVE);
-        self.branch(flag);
+        self.branch(!flag);
     }
 
     fn inx(&mut self) {
@@ -387,6 +429,11 @@ impl CPU {
     }
 
     fn bne(&mut self) {
+        let flag = self.get_flag(F_ZERO);
+        self.branch(!flag);
+    }
+
+    fn beq(&mut self) {
         let flag = self.get_flag(F_ZERO);
         self.branch(flag);
     }
@@ -422,6 +469,11 @@ impl CPU {
         self.regs.pc = self.pop_word();
     }
 
+    fn rts(&mut self) {
+        let pc = self.pop_word();
+        self.regs.pc = pc + 1;
+    }
+
     fn bit<M: AddressingMode>(&mut self, mode: M) {
         let val = mode.load(self);
         let a = self.regs.a;
@@ -440,6 +492,12 @@ impl CPU {
         }
         self.set_flag(F_CARRY, new_carry);
         val = self.set_zn(val);
+        mode.store(self, val);
+    }
+
+    fn inc<M: AddressingMode>(&mut self, mode: M) {
+        let mut val = mode.load(self);
+        val = self.set_zn(val + 1);
         mode.store(self, val);
     }
 }
