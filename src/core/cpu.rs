@@ -238,7 +238,6 @@ impl CPU {
     }
 
     pub fn step(&mut self) {
-        let pc = self.regs.pc;
         let next = self.load_byte_increment_pc();
         self.decode(next);
     }
@@ -250,25 +249,34 @@ impl CPU {
             0x02 => self.hlt(),
             0x05 => self.ora(ZeroPageAddressingMode),
             0x09 => self.ora(ImmediateAddressingMode),
+            0x0B => self.noop(), // Illegal opcode - ANC ImmediateAddressingMode
             0x10 => self.bpl(),
             0x11 => self.ora(IndirectIndexedAddressingMode),
             0x15 => self.ora(ZeroPageXAddressingMode),
+            0x17 => self.noop(), // Illegal opcode - SLO
             0x19 => self.ora(AbsoluteYAddressingMode),
             0x20 => self.jsr(),
             0x21 => self.and(IndexedIndirectAddressingMode),
             0x24 => self.bit(ZeroPageAddressingMode),
             0x26 => self.rol(ZeroPageAddressingMode),
             0x2C => self.bit(AbsoluteAddressingMode),
+            0x32 => self.hlt(),
             0x40 => self.rti(),
             0x41 => self.eor(IndexedIndirectAddressingMode),
             0x44 => self.noop(),
+            0x45 => self.eor(ZeroPageAddressingMode),
             0x48 => self.pha(),
             0x4C => self.jmp(),
             0x4D => self.eor(AbsoluteAddressingMode),
+            0x5C => self.noop(),
+            0x5D => self.eor(AbsoluteXAddressingMode),
             0x60 => self.rts(),
+            0x68 => self.pla(),
             0x78 => self.sei(),
             0x85 => self.sta(ZeroPageAddressingMode),
+            0x86 => self.stx(ZeroPageAddressingMode),
             0x8A => self.txa(),
+            0x8C => self.sty(AbsoluteAddressingMode),
             0x8D => self.sta(AbsoluteAddressingMode),
             0x95 => self.sta(ZeroPageXAddressingMode),
             0x9A => self.txs(),
@@ -276,7 +284,9 @@ impl CPU {
             0xA0 => self.ldy(ImmediateAddressingMode),
             0xA2 => self.ldx(ImmediateAddressingMode),
             0xA5 => self.lda(ZeroPageAddressingMode),
+            0xA6 => self.ldx(ZeroPageAddressingMode),
             0xA9 => self.lda(ImmediateAddressingMode),
+            0xAA => self.tax(),
             0xAD => self.lda(AbsoluteAddressingMode),
             0xBD => self.lda(AbsoluteXAddressingMode),
             0xC9 => self.cmp(ImmediateAddressingMode),
@@ -284,10 +294,12 @@ impl CPU {
             0xD8 => self.cld(),
             0xDD => self.cmp(AbsoluteXAddressingMode),
             0xE3 => self.noop(), // Illegal opcode
+            0xE6 => self.inc(ZeroPageAddressingMode),
             0xE8 => self.inx(),
             0xED => self.sbc(AbsoluteAddressingMode),
             0xF0 => self.beq(),
-            0xFB => self.noop(), // Illegal opcode - rmw AbsoluteYAddressingMode
+            0xF9 => self.sbc(AbsoluteYAddressingMode),
+            0xFB => self.noop(), // Illegal opcode - RMW AbsoluteYAddressingMode
             0xFC => self.noop(), // Illegal opcode
             0xFE => self.inc(AbsoluteXAddressingMode),
             0xFF => self.noop(), // Illegal opcode - ISC {adr} = INC {adr} + SBC {adr}
@@ -381,6 +393,16 @@ impl CPU {
         mode.store(self, a);
     }
 
+    fn stx<M: AddressingMode>(&mut self, mode: M) {
+        let x = self.regs.x;
+        mode.store(self, x);
+    }
+
+    fn sty<M: AddressingMode>(&mut self, mode: M) {
+        let y = self.regs.y;
+        mode.store(self, y);
+    }
+    
     fn lda<M: AddressingMode>(&mut self, mode: M) {
         let val = mode.load(self);
         self.regs.a = self.set_zn(val);
@@ -416,6 +438,11 @@ impl CPU {
     fn txa(&mut self) {
         let x = self.regs.x;
         self.regs.a = self.set_zn(x);
+    }
+
+    fn tax(&mut self) {
+        let a = self.regs.a;
+        self.regs.x = self.set_zn(a);
     }
 
     fn bpl(&mut self) {
@@ -499,6 +526,11 @@ impl CPU {
         let mut val = mode.load(self);
         val = self.set_zn(val + 1);
         mode.store(self, val);
+    }
+
+    fn pla(&mut self) {
+        let val = self.pop_byte();
+        self.regs.a = self.set_zn(val);
     }
 }
 
