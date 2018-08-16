@@ -69,6 +69,7 @@ mod cpu_tests {
     fn push_byte_on_stack() {
         let mut cpu = setup_cpu();
         cpu.push_byte(0xDD);
+        assert_eq!(cpu.regs.s, 0xFC);
         assert_eq!(cpu.mem_map.ram.mem[(0x100 + (cpu.regs.s + 1) as u16) as usize], 0xDD);
     }
 
@@ -76,8 +77,32 @@ mod cpu_tests {
     fn push_word_on_stack() {
         let mut cpu = setup_cpu();
         cpu.push_word(0xCCDD);
+        assert_eq!(cpu.regs.s, 0xFB);
         assert_eq!(cpu.mem_map.ram.mem[(0x100 + (cpu.regs.s + 1) as u16) as usize], 0xDD);
         assert_eq!(cpu.mem_map.ram.mem[(0x100 + (cpu.regs.s + 2) as u16) as usize], 0xCC);
+    }
+
+    #[test]
+    fn pop_byte_from_stack() {
+        let mut cpu = setup_cpu();
+        cpu.regs.s = 0xFC;
+        cpu.mem_map.ram.mem[0x100 + 0xFD] = 0xDE;
+        let val = cpu.pop_byte();
+
+        assert_eq!(val, 0xDE);
+        assert_eq!(cpu.regs.s, 0xFD);
+    }
+
+    #[test]
+    fn pop_word_from_stack() {
+        let mut cpu = setup_cpu();
+        cpu.regs.s = 0xFB;
+        cpu.mem_map.ram.mem[0x100 + 0xFD] = 0xDE;
+        cpu.mem_map.ram.mem[0x100 + 0xFC] = 0xAD;
+        let val = cpu.pop_word();
+
+        assert_eq!(val, 0xDEAD);
+        assert_eq!(cpu.regs.s, 0xFD);
     }
 
     #[test]
