@@ -290,4 +290,37 @@ mod cpu_tests {
         cpu.branch(false);
         assert_eq!(cpu.regs.pc, 0xFF01);
     }
+
+    #[test]
+    fn sta() {
+        let mut cpu = setup_cpu();
+        cpu.regs.pc = 0x100;
+        cpu.mem_map.ram.mem[0x100] = 0xAA;
+        cpu.mem_map.ram.mem[0x101] = 0x01;
+        cpu.regs.a = 0xDE;
+        cpu.sta(AbsoluteAddressingMode);
+        assert_eq!(cpu.mem_map.ram.mem[0x01AA], 0xDE);
+    }
+
+    #[test]
+    fn stx() {
+        let mut cpu = setup_cpu();
+        cpu.regs.pc = 0x100;
+        cpu.mem_map.ram.mem[0x100] = 0xAA;
+        cpu.mem_map.ram.mem[0x101] = 0x01;
+        cpu.regs.x = 0xDE;
+        cpu.stx(AbsoluteAddressingMode);
+        assert_eq!(cpu.mem_map.ram.mem[0x01AA], 0xDE);
+    }
+
+    #[test]
+    fn sty() {
+        let mut cpu = setup_cpu();
+        cpu.regs.pc = 0x100;
+        cpu.mem_map.ram.mem[0x100] = 0xAA;
+        cpu.mem_map.ram.mem[0x101] = 0x01;
+        cpu.regs.y = 0xDE;
+        cpu.sty(AbsoluteAddressingMode);
+        assert_eq!(cpu.mem_map.ram.mem[0x01AA], 0xDE);
+    }
 }

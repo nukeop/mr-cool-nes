@@ -388,17 +388,17 @@ impl CPU {
         info!("Halt instruction executed, reset required");
     }
 
-    fn sta<M: AddressingMode>(&mut self, mode: M) {
+    pub fn sta<M: AddressingMode>(&mut self, mode: M) {
         let a = self.regs.a;
         mode.store(self, a);
     }
 
-    fn stx<M: AddressingMode>(&mut self, mode: M) {
+    pub fn stx<M: AddressingMode>(&mut self, mode: M) {
         let x = self.regs.x;
         mode.store(self, x);
     }
 
-    fn sty<M: AddressingMode>(&mut self, mode: M) {
+    pub fn sty<M: AddressingMode>(&mut self, mode: M) {
         let y = self.regs.y;
         mode.store(self, y);
     }
