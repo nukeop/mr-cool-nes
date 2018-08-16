@@ -40,6 +40,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore]
     fn cpu_instr_implied() {
         let rom_path = "tests/roms/cpu_instructions/01-implied.nes".to_owned();
         let mut nes = setup_emulator(&rom_path);
