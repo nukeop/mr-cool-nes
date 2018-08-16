@@ -2,6 +2,7 @@ use core::rom::Rom;
 
 pub trait Mapper {
     fn type_of(&self) -> String;
+    fn get_rom(&self) -> &Rom;
     fn load_prg_byte(&self, addr: u16) -> u8;
     fn load_chr_byte(&self, addr: u16) -> u8;
     fn store_prg_byte(&self, addr: u16, val: u8);
@@ -34,6 +35,10 @@ impl NROM {
 impl Mapper for NROM {
     fn type_of(&self) -> String {
         "NROM".to_string()
+    }
+
+    fn get_rom(&self) -> &Rom {
+        return &self.rom;
     }
     
     fn load_prg_byte(&self, addr: u16) -> u8 {
@@ -91,6 +96,10 @@ impl SxROM {
 impl Mapper for SxROM {
     fn type_of(&self) -> String {
         "SxROM".to_string()
+    }
+
+    fn get_rom(&self) -> &Rom {
+        return &self.rom;
     }
     
     fn load_prg_byte(&self, addr: u16) -> u8 {

@@ -9,6 +9,7 @@ mod integration_tests {
     use mr_cool_nes::core::memory;
     use mr_cool_nes::core::memory::Memory;
     use mr_cool_nes::core::nes;
+    use mr_cool_nes::core::tools::split_rom;
     use mr_cool_nes::renderer::Renderer;
     use mr_cool_nes::headless_renderer;
 
@@ -39,10 +40,11 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore]
     fn cpu_instr_implied() {
         let rom_path = "tests/roms/cpu_instructions/01-implied.nes".to_owned();
         let mut nes = setup_emulator(&rom_path);
+
+        split_rom(nes.cpu.mem_map.mapper.get_rom(), &"tests/".to_owned());
 
         nes.cpu.reset();
 
