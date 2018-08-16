@@ -256,4 +256,38 @@ mod cpu_tests {
         assert_eq!(cpu.get_flag(F_ZERO), true);
         assert_eq!(cpu.get_flag(F_NEGATIVE), false);
     }
+
+    #[test]
+    fn branch_go() {
+        let mut rom = setup_rom();
+        let ram = RAM::new();
+        let ppu = PPU::new();
+        
+        rom.prg_rom[0xFF00 & 0x3FFF] = 0x04;
+
+        let mapper = NROM::new(rom);
+        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        cpu.reset();
+        cpu.regs.pc = 0xFF00;
+
+        cpu.branch(true);
+        assert_eq!(cpu.regs.pc, 0xFF05);
+    }
+
+    #[test]
+    fn branch_dont_go() {
+        let mut rom = setup_rom();
+        let ram = RAM::new();
+        let ppu = PPU::new();
+        
+        rom.prg_rom[0xFF00 & 0x3FFF] = 0x04;
+
+        let mapper = NROM::new(rom);
+        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        cpu.reset();
+        cpu.regs.pc = 0xFF00;
+
+        cpu.branch(false);
+        assert_eq!(cpu.regs.pc, 0xFF01);
+    }
 }
