@@ -195,32 +195,35 @@ impl CPU {
         info!("Regs after reset: {}", self.regs);
     }
 
-    pub fn push_byte(&mut self, val: u8) {
-        let s = self.regs.s;
-        self.store_byte(0x100 + s as u16, val);
+    pub fn stack_pointer(&self) -> u16 {
+        self.regs.s as u16 + 0x100
+    }
 
-        let mut temp_s: u16 = s as u16-1;
-        temp_s = 0x0100 | (temp_s & 0xFF);
-        self.regs.s = temp_s as u8;
+    pub fn push_byte(&mut self, val: u8) {
+        let addr = self.stack_pointer();
+        self.store_byte(addr, val);
+        self.regs.s -= 1;
     }
 
     pub fn push_word(&mut self, val: u16) {
-        let s = self.regs.s;
-        self.store_word(0x100 + (s - 1) as u16, val);
-        self.regs.s -= 2;
+        let hi = (val >> 8) as u8;
+        self.push_byte(hi);
+
+        let low = val as u8;
+        self.push_byte(low);
     }
 
     pub fn pop_byte(&mut self) -> u8 {
+        let addr = self.stack_pointer();
         self.regs.s += 1;
-        let s = self.regs.s;
-        self.load_byte(0x100 + s as u16)
+        self.load_byte(addr)
     }
 
     pub fn pop_word(&mut self) -> u16 {
-        let s = self.regs.s;
-        let val = self.load_word(0x100 + s as u16 + 1);
-        self.regs.s += 2;
-        val
+        let low = self.pop_byte();
+        let hi = self.pop_byte();
+
+        ((hi as u16) << 8) | (low as u16)
     }
 
     pub fn load_byte_increment_pc(&mut self) -> u8 {
