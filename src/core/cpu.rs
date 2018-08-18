@@ -259,6 +259,8 @@ impl CPU {
             0x15 => self.ora(ZeroPageXAddressingMode),
             0x17 => self.noop(), // Illegal opcode - SLO
             0x19 => self.ora(AbsoluteYAddressingMode),
+            0x1C => self.noop(),
+            0x1D => self.ora(AbsoluteXAddressingMode),
             0x20 => self.jsr(),
             0x21 => self.and(IndexedIndirectAddressingMode),
             0x24 => self.bit(ZeroPageAddressingMode),
