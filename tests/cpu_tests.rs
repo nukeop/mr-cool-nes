@@ -348,4 +348,14 @@ mod cpu_tests {
         cpu.sty(AbsoluteAddressingMode);
         assert_eq!(cpu.mem_map.ram.mem[0x01AA], 0xDE);
     }
+
+    #[test]
+    fn inc() {
+        let mut cpu = setup_cpu();
+        cpu.regs.pc = 0x100;
+        cpu.mem_map.ram.mem[0xAA] = 0x09;
+        cpu.mem_map.ram.mem[0x100] = 0xAA;
+        cpu.inc(ZeroPageAddressingMode);
+        assert_eq!(cpu.mem_map.ram.mem[0xAA], 0x0A);
+    }
 }

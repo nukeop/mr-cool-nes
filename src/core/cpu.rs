@@ -118,7 +118,8 @@ impl AddressingMode for ZeroPageAddressingMode {
     }
 
     fn store(&self, cpu: &mut CPU, val: u8) {
-        let addr = cpu.load_byte_increment_pc();
+        let pc = cpu.regs.pc;
+        let addr = cpu.load_byte(pc - 1);
         cpu.store_byte(addr as u16, val);
     }
 }
@@ -525,7 +526,7 @@ impl CPU {
         mode.store(self, val);
     }
 
-    fn inc<M: AddressingMode>(&mut self, mode: M) {
+    pub fn inc<M: AddressingMode>(&mut self, mode: M) {
         let mut val = mode.load(self);
         val = self.set_zn(val + 1);
         mode.store(self, val);
