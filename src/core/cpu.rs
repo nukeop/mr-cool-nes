@@ -210,7 +210,7 @@ impl CPU {
     pub fn pop_byte(&mut self) -> u8 {
         let addr = self.stack_pointer();
         self.regs.s += 1;
-        self.load_byte(addr+1)
+        self.load_byte(addr + 1)
     }
 
     pub fn pop_word(&mut self) -> u16 {
@@ -367,8 +367,7 @@ impl CPU {
     }
 
     fn jmp(&mut self) {
-        let addr = self.load_word_increment_pc();
-        let operand = self.load_word(addr);
+        let operand = self.load_word_increment_pc();
         self.regs.pc = operand;
     }
 
