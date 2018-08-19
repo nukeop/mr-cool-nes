@@ -355,7 +355,8 @@ mod cpu_tests {
         cpu.regs.pc = 0x100;
         cpu.mem_map.ram.mem[0xAA] = 0x09;
         cpu.mem_map.ram.mem[0x100] = 0xAA;
-        cpu.inc(ZeroPageAddressingMode);
+        let mode = cpu.zero_page_addressing_mode();
+        cpu.inc(mode);
         assert_eq!(cpu.mem_map.ram.mem[0xAA], 0x0A);
     }
 }
