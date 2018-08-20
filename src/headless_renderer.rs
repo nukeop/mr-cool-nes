@@ -1,4 +1,4 @@
-use renderer::Renderer;
+use renderer::{Renderer, RenderingState};
 
 pub struct HeadlessRenderer {
     rom_path: String
@@ -14,11 +14,14 @@ impl HeadlessRenderer {
 }
 
 impl Renderer for HeadlessRenderer {
-    fn start_loop<F>(&mut self, mut update: F) where F: FnMut() -> () {
+    fn start_loop<F>(&mut self, mut update: F, run: &RenderingState) where F: FnMut() -> () {
         info!("Starting main loop");
         info!("Rom: {}", self.rom_path);
         loop {
             update();
+            if run.state == "stop" {
+                break;
+            }
         };
     }
 }

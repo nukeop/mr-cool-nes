@@ -10,12 +10,14 @@ mod integration_tests {
     use mr_cool_nes::core::memory::Memory;
     use mr_cool_nes::core::nes;
     use mr_cool_nes::core::tools::split_rom;
-    use mr_cool_nes::renderer::Renderer;
+    use mr_cool_nes::renderer::{Renderer, RenderingState};
     use mr_cool_nes::headless_renderer;
+
+    static mut RENDERING_STATE: RenderingState = RenderingState{state: "test"};
 
     fn setup_emulator(rom_path: &String) -> nes::NES {
         let rom = rom::Rom::load(rom_path).unwrap();
-        let mapper = mapper::select_mapper(rom);
+        let mapper = Box::new(mapper::TestMapper::new(rom));
         let ppu = ppu::PPU::new();
         let ram = memory::RAM::new();
         let cpu = cpu::CPU::new(ppu, ram, mapper);
@@ -36,22 +38,51 @@ mod integration_tests {
         nes.cpu.reset();
 
         let mut renderer = Box::new(headless_renderer::HeadlessRenderer::new(&rom_path));
-        renderer.start_loop(|| nes.cpu.step());
+        unsafe { renderer.start_loop(|| nes.cpu.step(), &RENDERING_STATE); }
     }
 
     #[test]
-    #[ignore]
     fn cpu_instr_implied() {
+        println!("Running test: 01-implied.nes");
         let rom_path = "tests/roms/cpu_instructions/01-implied.nes".to_owned();
         let mut nes = setup_emulator(&rom_path);
 
-        split_rom(nes.cpu.mem_map.mapper.get_rom(), &"tests/".to_owned());
-
         nes.cpu.reset();
+        
+        let mut renderer = headless_renderer::HeadlessRenderer::new(&rom_path);
+        let mut test_status = 0xFF;
+        
+        unsafe {
+            RENDERING_STATE.state = "test";
+            
+            renderer.start_loop(|| {
 
-        let mut renderer = Box::new(headless_renderer::HeadlessRenderer::new(&rom_path));
-        renderer.start_loop(|| {
-            nes.cpu.step();
-        });
+                nes.cpu.step();
+                //println!("Run in closure: {}", run);
+                let status = nes.cpu.load_byte(0x6000);
+                if (test_status != status) {
+                    println!("Test status changed to {:X}.", status);
+
+                    if (status == 0x0) {
+                        println!("Test initializing.\n");
+                    }
+                    
+                    if (status == 0x80) {
+                        println!("Test started running.\n");
+                    }
+
+                    if (test_status == 0x80) {
+                        println!("Test finished running. Result code: {:X}", status);
+
+                        // Error codes: https://github.com/christopherpow/nes-test-roms/blob/master/other/nestest.txt#L167
+                        assert!(status < 0x3E || status > 0x45);
+                        RENDERING_STATE.state = "stop";
+                    }
+                    
+                    test_status = status;
+                }
+                
+            }, &RENDERING_STATE);
+        }
     }
 }

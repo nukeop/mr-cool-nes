@@ -11,7 +11,7 @@ use std::ffi::OsString;
 
 use font_map::get_letter;
 use emu_config::EmuConfig;
-use renderer::Renderer;
+use renderer::{Renderer, RenderingState};
 
 
 const SCREEN_WIDTH: u32 = 256;
@@ -88,7 +88,7 @@ impl SDLRenderer {
 }
 
 impl Renderer for SDLRenderer {
-    fn start_loop<F>(&mut self, mut update: F) where F: FnMut() -> () {
+    fn start_loop<F>(&mut self, mut update: F, run: &RenderingState) where F: FnMut() -> () {
         info!("Starting render loop");
         let rom_name = self.rom_path.to_owned();
         let rom_name_path = Path::new(&rom_name);

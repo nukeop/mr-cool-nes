@@ -3,7 +3,7 @@ use clap::{App, Arg, ArgMatches};
 use core;
 use core::mapper;
 use emu_config::EmuConfig;
-use renderer::Renderer;
+use renderer::{Renderer, RenderingState};
 
 pub fn read_cl_args<'a>() -> ArgMatches<'a> {
     let matches = App::new("mr-cool-nes")
@@ -46,5 +46,5 @@ pub fn start<R: Renderer>(rom: core::rom::Rom, config: EmuConfig, rom_path: &Str
     
     nes.cpu.reset();
     
-    renderer.start_loop(|| nes.cpu.step());
+    renderer.start_loop(|| nes.cpu.step(), &RenderingState{state: "run"});
 }
