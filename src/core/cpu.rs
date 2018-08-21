@@ -281,6 +281,7 @@ impl CPU {
             0x4A => self.lsr(AccumulatorAddressingMode),
             0x4C => self.jmp(),
             0x4D => self.eor(AbsoluteAddressingMode),
+            0x54 => self.noop(),
             0x58 => self.cli(),
             0x5A => self.noop(),
             0x5C => self.noop(),
@@ -290,9 +291,14 @@ impl CPU {
             0x68 => self.pla(),
             0x69 => self.adc(ImmediateAddressingMode),
             0x6A => self.ror(AccumulatorAddressingMode),
+            0x6B => self.noop(), // Illegal opcode - ARR ImmediateAddressingMode
             0x6C => self.jmp_indirect(),
+            0x70 => self.bvs(),
             0x78 => self.sei(),
             0x7A => self.noop(),
+            0x7C => self.noop(),
+            0x80 => self.noop(),
+            0x81 => self.sta(IndexedIndirectAddressingMode),
             0x84 => {let mode = self.zero_page_addressing_mode(); self.sty(mode);},
             0x85 => {let mode = self.zero_page_addressing_mode(); self.sta(mode);},
             0x86 => {let mode = self.zero_page_addressing_mode(); self.stx(mode);},
@@ -336,14 +342,17 @@ impl CPU {
             0xD9 => self.cmp(AbsoluteYAddressingMode),
             0xDA => self.noop(),
             0xDD => self.cmp(AbsoluteXAddressingMode),
+            0xDE => self.dec(AbsoluteXAddressingMode),
             0xE0 => self.cpx(ImmediateAddressingMode),
             0xE3 => self.noop(), // Illegal opcode
             0xE6 => {let mode = self.zero_page_addressing_mode(); self.inc(mode);},
             0xE8 => self.inx(),
             0xE9 => self.sbc(ImmediateAddressingMode),
             0xEA => self.noop(),
+            0xEB => self.sbc(ImmediateAddressingMode),
             0xED => self.sbc(AbsoluteAddressingMode),
             0xF0 => self.beq(),
+            0xF1 => self.sbc(IndirectIndexedAddressingMode),
             0xF8 => self.sed(),
             0xF9 => self.sbc(AbsoluteYAddressingMode),
             0xFA => self.noop(),
@@ -532,10 +541,6 @@ impl CPU {
         self.regs.x = self.set_zn(s);
     }
 
-    fn bpl(&mut self) {
-        let flag = self.get_flag(F_NEGATIVE);
-        self.branch(!flag);
-    }
 
     fn inx(&mut self) {
         let x = self.regs.x;
@@ -555,6 +560,12 @@ impl CPU {
     fn dey(&mut self) {
         let y = self.regs.y;
         self.regs.y = self.set_zn(y.wrapping_sub(1));
+    }
+
+    fn dec<M: AddressingMode>(&mut self, mode: M) {
+        let mut val = mode.load(self);
+        val = self.set_zn(val.wrapping_sub(1));
+        mode.store(self, val);
     }
     
     fn bne(&mut self) {
@@ -577,8 +588,18 @@ impl CPU {
         self.branch(flag);
     }
 
+    fn bvs(&mut self) {
+        let flag = self.get_flag(F_OVERFLOW);
+        self.branch(flag);
+    }
+    
     fn bcc(&mut self) {
         let flag = self.get_flag(F_CARRY);
+        self.branch(!flag);
+    }
+
+    fn bpl(&mut self) {
+        let flag = self.get_flag(F_NEGATIVE);
         self.branch(!flag);
     }
 
@@ -671,7 +692,7 @@ impl CPU {
 
     pub fn inc<M: AddressingMode>(&mut self, mode: M) {
         let mut val = mode.load(self);
-        val = self.set_zn(val + 1);
+        val = self.set_zn(val.wrapping_add(1));
         mode.store(self, val);
     }
 

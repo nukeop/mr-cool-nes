@@ -28,28 +28,13 @@ mod integration_tests {
             .finalize()
     }
 
-    
-    #[test]
-    #[ignore]
-    fn ram_after_reset() {
-        let rom_path = "tests/roms/ram/ram_after_reset.nes".to_owned();
-        let mut nes = setup_emulator(&rom_path);
-
-        nes.cpu.reset();
-
-        let mut renderer = Box::new(headless_renderer::HeadlessRenderer::new(&rom_path));
-        unsafe { renderer.start_loop(|| nes.cpu.step(), &RENDERING_STATE); }
-    }
-
-    #[test]
-    fn cpu_instr_implied() {
-        println!("Running test: 01-implied.nes");
-        let rom_path = "tests/roms/cpu_instructions/01-implied.nes".to_owned();
-        let mut nes = setup_emulator(&rom_path);
+    fn run_integration_test(rom_name: &str, rom_path: &str, error_lower: u8, error_upper: u8) {
+        println!("\nRunning test: {}", rom_name);
+        let mut nes = setup_emulator(&rom_path.to_owned());
 
         nes.cpu.reset();
         
-        let mut renderer = headless_renderer::HeadlessRenderer::new(&rom_path);
+        let mut renderer = headless_renderer::HeadlessRenderer::new(&rom_path.to_owned());
         let mut test_status = 0xFF;
         
         unsafe {
@@ -58,7 +43,6 @@ mod integration_tests {
             renderer.start_loop(|| {
 
                 nes.cpu.step();
-                //println!("Run in closure: {}", run);
                 let status = nes.cpu.load_byte(0x6000);
                 if (test_status != status) {
                     println!("Test status changed to {:X}.", status);
@@ -75,14 +59,47 @@ mod integration_tests {
                         println!("Test finished running. Result code: {:X}", status);
 
                         // Error codes: https://github.com/christopherpow/nes-test-roms/blob/master/other/nestest.txt#L167
-                        assert!(status < 0x3E || status > 0x45);
+                        assert!(status < error_lower || status > error_upper);
                         RENDERING_STATE.state = "stop";
                     }
                     
                     test_status = status;
                 }
-                
             }, &RENDERING_STATE);
         }
+    }
+
+    
+    #[test]
+    #[ignore]
+    fn ram_after_reset() {
+        let rom_path = "tests/roms/ram/ram_after_reset.nes".to_owned();
+        let mut nes = setup_emulator(&rom_path);
+
+        nes.cpu.reset();
+
+        let mut renderer = Box::new(headless_renderer::HeadlessRenderer::new(&rom_path));
+        unsafe { renderer.start_loop(|| nes.cpu.step(), &RENDERING_STATE); }
+    }
+
+    #[test]
+    fn cpu_instr_implied() {
+        run_integration_test(
+            "01-implied.nes",
+            "tests/roms/cpu_instructions/01-implied.nes",
+            0x3E,
+            0x45
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn cpu_instr_immediate() {
+        run_integration_test(
+            "02-immediate.nes",
+            "tests/roms/cpu_instructions/02-immediate.nes",
+            0x18,
+            0x75
+        );
     }
 }
