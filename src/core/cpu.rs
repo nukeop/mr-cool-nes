@@ -32,42 +32,6 @@ impl AddressingMode for ImmediateAddressingMode {
     fn store(&self, cpu: &mut CPU, val: u8) { panic!("Attempted write with immediate addressing mode") }
 }
 
-pub struct AbsoluteAddressingMode;
-impl AddressingMode for AbsoluteAddressingMode {
-    fn load(&self, cpu: &mut CPU) -> u8 {
-        let addr = cpu.load_word_increment_pc();
-        cpu.load_byte(addr)
-    }
-    fn store(&self, cpu: &mut CPU, val: u8) {
-        let addr = cpu.load_word_increment_pc();
-        cpu.store_byte(addr, val);
-    }
-}
-
-pub struct AbsoluteYAddressingMode;
-impl AddressingMode for AbsoluteYAddressingMode {
-    fn load(&self, cpu: &mut CPU) -> u8 {
-        let addr = cpu.load_word_increment_pc() + cpu.regs.y as u16;
-        cpu.load_byte(addr)
-    }
-    fn store(&self, cpu: &mut CPU, val: u8) {
-        let addr = cpu.load_word_increment_pc() + cpu.regs.y as u16;
-        cpu.store_byte(addr, val);
-    }
-}
-
-pub struct AbsoluteXAddressingMode;
-impl AddressingMode for AbsoluteXAddressingMode {
-    fn load(&self, cpu: &mut CPU) -> u8 {
-        let addr = cpu.load_word_increment_pc() + cpu.regs.x as u16;
-        cpu.load_byte(addr)
-    }
-    fn store(&self, cpu: &mut CPU, val: u8) {
-        let addr = cpu.load_word_increment_pc() + cpu.regs.x as u16;
-        cpu.store_byte(addr, val);
-    }
-}
-
 pub struct IndexedIndirectAddressingMode;
 impl IndexedIndirectAddressingMode {
     fn addr(&self, cpu: &mut CPU) -> u16 {
@@ -189,6 +153,18 @@ impl CPU {
         self.regs.x) as u16}
     }
 
+    pub fn absolute_addressing_mode(&mut self) -> MemoryAddressingMode {
+        MemoryAddressingMode {val: self.load_word_increment_pc() as u16}
+    }
+
+    pub fn absolute_x_addressing_mode(&mut self) -> MemoryAddressingMode {
+        MemoryAddressingMode {val: self.load_word_increment_pc() + self.regs.x as u16}
+    }
+
+    pub fn absolute_y_addressing_mode(&mut self) -> MemoryAddressingMode {
+        MemoryAddressingMode {val: self.load_word_increment_pc() + self.regs.y as u16}
+    }
+
     pub fn stack_pointer(&self) -> u16 {
         self.regs.s as u16 + 0x100
     }
@@ -220,6 +196,14 @@ impl CPU {
         ((hi as u16) << 8) | (low as u16)
     }
 
+    pub fn printable_stack(& mut self) -> String {
+        let mut stack = "".to_owned();
+        for i in self.regs.s..0xFF {
+            stack += &format!("{:X} ", self.load_byte(0x100 + i as u16));
+        }
+        stack
+    }
+
     pub fn load_byte_increment_pc(&mut self) -> u8 {
         let pc = self.regs.pc;
         let val = self.load_byte(pc);
@@ -236,6 +220,11 @@ impl CPU {
 
     pub fn step(&mut self) {
         let next = self.load_byte_increment_pc();
+
+            //println!("Opcode: {:X}", next);
+            //println!("PC: {:X}\n", self.regs.pc);
+            //`println!("Stack: {}\n", self.printable_stack());
+        
         self.decode(next);
     }
 
@@ -250,16 +239,16 @@ impl CPU {
             0x09 => self.ora(ImmediateAddressingMode),
             0x0A => self.asl(AccumulatorAddressingMode),
             0x0B => self.noop(), // Illegal opcode - ANC ImmediateAddressingMode
-            0x0D => self.ora(AbsoluteAddressingMode),
+            0x0D => {let mode = self.absolute_addressing_mode(); self.ora(mode);},
             0x10 => self.bpl(),
             0x11 => self.ora(IndirectIndexedAddressingMode),
             0x15 => {let mode = self.zero_page_x_addressing_mode(); self.ora(mode);},
             0x17 => self.noop(), // Illegal opcode - SLO
             0x18 => self.clc(),
-            0x19 => self.ora(AbsoluteYAddressingMode),
+            0x19 => {let mode = self.absolute_y_addressing_mode(); self.ora(mode);},
             0x1A => self.noop(),
             0x1C => self.noop(),
-            0x1D => self.ora(AbsoluteXAddressingMode),
+            0x1D => {let mode = self.absolute_x_addressing_mode(); self.ora(mode);},
             0x20 => self.jsr(),
             0x21 => self.and(IndexedIndirectAddressingMode),
             0x24 => {let mode = self.zero_page_addressing_mode(); self.bit(mode);},
@@ -267,7 +256,7 @@ impl CPU {
             0x28 => self.plp(),
             0x29 => self.and(ImmediateAddressingMode),
             0x2A => self.rol(AccumulatorAddressingMode),
-            0x2C => self.bit(AbsoluteAddressingMode),
+            0x2C => {let mode = self.absolute_addressing_mode(); self.bit(mode);},
             0x30 => self.bmi(),
             0x32 => self.hlt(),
             0x38 => self.sec(),
@@ -280,12 +269,12 @@ impl CPU {
             0x49 => self.eor(ImmediateAddressingMode),
             0x4A => self.lsr(AccumulatorAddressingMode),
             0x4C => self.jmp(),
-            0x4D => self.eor(AbsoluteAddressingMode),
+            0x4D => {let mode = self.absolute_addressing_mode(); self.eor(mode);},
             0x54 => self.noop(),
             0x58 => self.cli(),
             0x5A => self.noop(),
             0x5C => self.noop(),
-            0x5D => self.eor(AbsoluteXAddressingMode),
+            0x5D => {let mode = self.absolute_x_addressing_mode(); self.eor(mode);},
             0x60 => self.rts(),
             0x66 => {let mode = self.zero_page_addressing_mode(); self.ror(mode);},
             0x68 => self.pla(),
@@ -304,16 +293,16 @@ impl CPU {
             0x86 => {let mode = self.zero_page_addressing_mode(); self.stx(mode);},
             0x88 => self.dey(),
             0x8A => self.txa(),
-            0x8C => self.sty(AbsoluteAddressingMode),
-            0x8D => self.sta(AbsoluteAddressingMode),
-            0x8E => self.stx(AbsoluteAddressingMode),
+            0x8C => {let mode = self.absolute_addressing_mode(); self.sty(mode);},
+            0x8D => {let mode = self.absolute_addressing_mode(); self.sta(mode);},
+            0x8E => {let mode = self.absolute_addressing_mode(); self.stx(mode);},
             0x90 => self.bcc(),
             0x91 => self.sta(IndirectIndexedAddressingMode),
             0x95 => {let mode = self.zero_page_x_addressing_mode(); self.sta(mode);},
             0x98 => self.tya(),
-            0x99 => self.sta(AbsoluteYAddressingMode),
+            0x99 => {let mode = self.absolute_y_addressing_mode(); self.sta(mode);},
             0x9A => self.txs(),
-            0x9D => self.sta(AbsoluteXAddressingMode),
+            0x9D => {let mode = self.absolute_x_addressing_mode(); self.sta(mode)},
             0xA0 => self.ldy(ImmediateAddressingMode),
             0xA2 => self.ldx(ImmediateAddressingMode),
             0xA4 => {let mode = self.zero_page_addressing_mode(); self.ldy(mode);},
@@ -322,16 +311,16 @@ impl CPU {
             0xA8 => self.tay(),
             0xA9 => self.lda(ImmediateAddressingMode),
             0xAA => self.tax(),
-            0xAC => self.ldy(AbsoluteAddressingMode),
-            0xAD => self.lda(AbsoluteAddressingMode),
-            0xAE => self.ldx(AbsoluteAddressingMode),
+            0xAC => {let mode = self.absolute_addressing_mode(); self.ldy(mode);},
+            0xAD => {let mode = self.absolute_addressing_mode(); self.lda(mode);},
+            0xAE => {let mode = self.absolute_addressing_mode(); self.ldx(mode);},
             0xB0 => self.bcs(),
             0xB1 => self.lda(IndirectIndexedAddressingMode),
             0xB5 => {let mode = self.zero_page_x_addressing_mode(); self.lda(mode);},
             0xB8 => self.clv(),
-            0xB9 => self.lda(AbsoluteYAddressingMode),
+            0xB9 => {let mode = self.absolute_y_addressing_mode(); self.lda(mode);},
             0xBA => self.tsx(),
-            0xBD => self.lda(AbsoluteXAddressingMode),
+            0xBD => {let mode = self.absolute_x_addressing_mode(); self.lda(mode);},
             0xC0 => self.cpy(ImmediateAddressingMode),
             0xC4 => {let mode = self.zero_page_addressing_mode(); self.cpy(mode);},
             0xCA => self.dex(),
@@ -339,10 +328,10 @@ impl CPU {
             0xC9 => self.cmp(ImmediateAddressingMode),
             0xD0 => self.bne(),
             0xD8 => self.cld(),
-            0xD9 => self.cmp(AbsoluteYAddressingMode),
+            0xD9 => {let mode = self.absolute_y_addressing_mode(); self.cmp(mode);},
             0xDA => self.noop(),
-            0xDD => self.cmp(AbsoluteXAddressingMode),
-            0xDE => self.dec(AbsoluteXAddressingMode),
+            0xDD => {let mode = self.absolute_x_addressing_mode(); self.cmp(mode);},
+            0xDE => {let mode = self.absolute_x_addressing_mode(); self.dec(mode);},
             0xE0 => self.cpx(ImmediateAddressingMode),
             0xE3 => self.noop(), // Illegal opcode
             0xE6 => {let mode = self.zero_page_addressing_mode(); self.inc(mode);},
@@ -350,15 +339,15 @@ impl CPU {
             0xE9 => self.sbc(ImmediateAddressingMode),
             0xEA => self.noop(),
             0xEB => self.sbc(ImmediateAddressingMode),
-            0xED => self.sbc(AbsoluteAddressingMode),
+            0xED => {let mode = self.absolute_addressing_mode(); self.sbc(mode);},
             0xF0 => self.beq(),
             0xF1 => self.sbc(IndirectIndexedAddressingMode),
             0xF8 => self.sed(),
-            0xF9 => self.sbc(AbsoluteYAddressingMode),
+            0xF9 => {let mode = self.absolute_y_addressing_mode(); self.sbc(mode);},
             0xFA => self.noop(),
             0xFB => self.noop(), // Illegal opcode - RMW AbsoluteYAddressingMode
             0xFC => self.noop(), // Illegal opcode
-            0xFE => self.inc(AbsoluteXAddressingMode),
+            0xFE => {let mode = self.absolute_x_addressing_mode(); self.inc(mode);},
             0xFF => self.noop(), // Illegal opcode - ISC {adr} = INC {adr} + SBC {adr}
             _ => panic!("Unimplemented opcode: {:X}\nRegisters on crash: {}", opcode, self.regs)
         };

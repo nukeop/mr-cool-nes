@@ -323,7 +323,8 @@ mod cpu_tests {
         cpu.mem_map.ram.mem[0x100] = 0xAA;
         cpu.mem_map.ram.mem[0x101] = 0x01;
         cpu.regs.a = 0xDE;
-        cpu.sta(AbsoluteAddressingMode);
+        let mode = cpu.absolute_addressing_mode();
+        cpu.sta(mode);
         assert_eq!(cpu.mem_map.ram.mem[0x01AA], 0xDE);
     }
 
@@ -334,7 +335,8 @@ mod cpu_tests {
         cpu.mem_map.ram.mem[0x100] = 0xAA;
         cpu.mem_map.ram.mem[0x101] = 0x01;
         cpu.regs.x = 0xDE;
-        cpu.stx(AbsoluteAddressingMode);
+        let mode = cpu.absolute_addressing_mode();
+        cpu.stx(mode);
         assert_eq!(cpu.mem_map.ram.mem[0x01AA], 0xDE);
     }
 
@@ -345,7 +347,8 @@ mod cpu_tests {
         cpu.mem_map.ram.mem[0x100] = 0xAA;
         cpu.mem_map.ram.mem[0x101] = 0x01;
         cpu.regs.y = 0xDE;
-        cpu.sty(AbsoluteAddressingMode);
+        let mode = cpu.absolute_addressing_mode();
+        cpu.sty(mode);
         assert_eq!(cpu.mem_map.ram.mem[0x01AA], 0xDE);
     }
 
