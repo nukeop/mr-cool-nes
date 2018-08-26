@@ -43,6 +43,7 @@ mod integration_tests {
             renderer.start_loop(|| {
 
                 nes.cpu.step();
+                
                 let status = nes.cpu.load_byte(0x6000);
                 if (test_status != status) {
                     println!("Test status changed to {:X}.", status);
@@ -82,7 +83,7 @@ mod integration_tests {
         unsafe { renderer.start_loop(|| nes.cpu.step(), &RENDERING_STATE); }
     }
 
-    #[test]
+    #[test]    
     fn cpu_instr_implied() {
         run_integration_test(
             "01-implied.nes",
