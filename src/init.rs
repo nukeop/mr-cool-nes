@@ -6,7 +6,7 @@ use emu_config::EmuConfig;
 use renderer::{Renderer, RenderingState};
 
 pub fn read_cl_args<'a>() -> ArgMatches<'a> {
-    let matches = App::new("mr-cool-nes")
+    App::new("mr-cool-nes")
         .version("0.1.0")
         .about("nes emulator")
         .author("nukeop <nukeop@gumblert.tech>")
@@ -25,11 +25,7 @@ pub fn read_cl_args<'a>() -> ArgMatches<'a> {
              .short("h")
              .long("headless")
              .help("Run without graphics"))
-        .get_matches();
-
-    let rom = matches.value_of("rom").unwrap_or("rom.nes").to_owned();
-    let config = matches.value_of("config").unwrap_or(".mrcoolnes").to_owned();
-    matches
+        .get_matches()
 }
 
 pub fn start<R: Renderer>(rom: core::rom::Rom, config: EmuConfig, rom_path: &String, mut renderer: Box<R>) {
@@ -46,5 +42,5 @@ pub fn start<R: Renderer>(rom: core::rom::Rom, config: EmuConfig, rom_path: &Str
     
     nes.cpu.reset();
     
-    renderer.start_loop(|| nes.cpu.step(), &RenderingState{state: "run"});
+    renderer.start_loop(&ppu, || nes.cpu.step(), &RenderingState{state: "run"});
 }

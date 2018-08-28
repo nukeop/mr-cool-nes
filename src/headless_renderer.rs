@@ -1,3 +1,4 @@
+use core::ppu::PPU;
 use renderer::{Renderer, RenderingState};
 
 pub struct HeadlessRenderer {
@@ -14,7 +15,7 @@ impl HeadlessRenderer {
 }
 
 impl Renderer for HeadlessRenderer {
-    fn start_loop<F>(&mut self, mut update: F, run: &RenderingState) where F: FnMut() -> () {
+    fn start_loop<F>(&mut self, ppu: &PPU, mut update: F, run: &RenderingState) where F: FnMut() -> () {
         info!("Starting main loop");
         info!("Rom: {}", self.rom_path);
         loop {

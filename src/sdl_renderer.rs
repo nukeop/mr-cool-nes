@@ -5,14 +5,14 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect;
 use sdl2::render;
-use sdl2::surface::Surface;
+use sdl2::surface::{Surface, SurfaceRef};
 use std::path::Path;
 use std::ffi::OsString;
 
+use core::ppu::PPU;
 use font_map::get_letter;
 use emu_config::EmuConfig;
 use renderer::{Renderer, RenderingState};
-
 
 const SCREEN_WIDTH: u32 = 256;
 const SCREEN_HEIGHT: u32 = 240;
@@ -47,7 +47,7 @@ impl SDLRenderer {
         let mut canvas = window.into_canvas().accelerated().present_vsync().build().unwrap();
 
         canvas.clear();
-        canvas.present();
+        canvas.present();        
 
         let font = SDLRenderer::create_font_surface(Path::new(&config.font_path));
         let emu_frame = Surface::new(SCREEN_WIDTH, EMULATOR_FRAME_HEIGHT, PixelFormatEnum::RGB24).unwrap();
@@ -56,17 +56,16 @@ impl SDLRenderer {
         SDLRenderer {
             rom_path: rom_path.to_owned(),
             context: sdl_context,
-            canvas: canvas,
-            font: font,
-            emu_frame: emu_frame,
-            emu_screen: emu_screen
+            canvas,
+            font,
+            emu_frame,
+            emu_screen
         }
     }
 
     pub fn create_font_surface(path: &Path) -> Surface<'static> {
         return Surface::from_file(path).unwrap();
     }
-
 
     pub fn draw_text(&mut self, text: &String, x: u32, y: u32) {
         let creator = self.canvas.texture_creator();
@@ -84,11 +83,22 @@ impl SDLRenderer {
 
     pub fn draw_title(&mut self) {
         self.draw_text(&("Mr. Cool NES".to_owned()), 0, 0);
-    }  
+    }
+
+    pub fn draw_screen(&mut self) {
+        let creator = self.canvas.texture_creator();
+        let texture = creator.create_texture_from_surface(self.emu_screen.as_ref()).unwrap();
+
+        self.canvas.copy(
+            &texture,
+            Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT),
+            Rect::new(0, EMULATOR_FRAME_HEIGHT as i32, SCREEN_WIDTH, SCREEN_HEIGHT)
+        ).unwrap();
+    }
 }
 
 impl Renderer for SDLRenderer {
-    fn start_loop<F>(&mut self, mut update: F, run: &RenderingState) where F: FnMut() -> () {
+    fn start_loop<F>(&mut self, ppu: &PPU, mut update: F, run: &RenderingState) where F: FnMut() -> () {
         info!("Starting render loop");
         let rom_name = self.rom_path.to_owned();
         let rom_name_path = Path::new(&rom_name);
@@ -109,6 +119,7 @@ impl Renderer for SDLRenderer {
 
             self.draw_title();
             self.draw_text(&("ROM: ".to_owned() + &rom_filename), 0, 16);
+            self.draw_screen();
             
             for event in event_pump.poll_iter() {
                 match event {

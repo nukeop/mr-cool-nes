@@ -44,7 +44,8 @@ pub struct OAM {
 pub struct PPU {
     pub regs: Registers,
     pub vram: VRAM,
-    pub oam: OAM
+    pub oam: OAM,
+    pub screen: [u8; 184320]
 }
 
 impl PPU {
@@ -58,7 +59,8 @@ impl PPU {
             },
             oam: OAM{
                 oam: [0; 0x100]
-            }
+            },
+            screen: [0; 184320]
         }
     }
 }
