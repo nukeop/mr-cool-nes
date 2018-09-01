@@ -42,5 +42,7 @@ pub fn start<R: Renderer>(rom: core::rom::Rom, config: EmuConfig, rom_path: &Str
     
     nes.cpu.reset();
     
-    renderer.start_loop(&ppu, || nes.cpu.step(), &RenderingState{state: "run"});
+    renderer.start_loop(&ppu, || {
+        nes.cpu.step();
+    }, &RenderingState{state: "run"});
 }

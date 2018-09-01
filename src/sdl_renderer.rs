@@ -25,7 +25,8 @@ pub struct SDLRenderer {
     canvas: sdl2::render::Canvas<sdl2::video::Window>,
     font: Surface<'static>,
     emu_frame: Surface<'static>,
-    emu_screen: Surface<'static>
+    emu_screen: Surface<'static>,
+    screen_size: u8
 }
 
 impl SDLRenderer {
@@ -59,7 +60,8 @@ impl SDLRenderer {
             canvas,
             font,
             emu_frame,
-            emu_screen
+            emu_screen,
+            screen_size: config.screen_size
         }
     }
 
@@ -85,14 +87,20 @@ impl SDLRenderer {
         self.draw_text(&("Mr. Cool NES".to_owned()), 0, 0);
     }
 
-    pub fn draw_screen(&mut self) {
+    pub fn draw_screen(&mut self, ppu: &PPU) {
         let creator = self.canvas.texture_creator();
-        let texture = creator.create_texture_from_surface(self.emu_screen.as_ref()).unwrap();
+        let mut texture = creator.create_texture_from_surface(self.emu_screen.as_ref()).unwrap();
+        texture.update(None, &ppu.screen, SCREEN_WIDTH as usize * 3).unwrap();
 
         self.canvas.copy(
             &texture,
             Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT),
-            Rect::new(0, EMULATOR_FRAME_HEIGHT as i32, SCREEN_WIDTH, SCREEN_HEIGHT)
+            Rect::new(
+                0,
+                EMULATOR_FRAME_HEIGHT as i32,
+                SCREEN_WIDTH * self.screen_size as u32,
+                SCREEN_HEIGHT * self.screen_size as u32
+            )
         ).unwrap();
     }
 }
@@ -116,10 +124,9 @@ impl Renderer for SDLRenderer {
 
             // Draw
             self.canvas.clear();
-
             self.draw_title();
             self.draw_text(&("ROM: ".to_owned() + &rom_filename), 0, 16);
-            self.draw_screen();
+            self.draw_screen(ppu);
             
             for event in event_pump.poll_iter() {
                 match event {
