@@ -14,15 +14,17 @@ impl HeadlessRenderer {
     }
 }
 
-impl Renderer for HeadlessRenderer {
-    fn start_loop<F>(&mut self, ppu: &PPU, mut update: F, run: &RenderingState) where F: FnMut() -> () {
+impl Renderer<HeadlessRenderer> for HeadlessRenderer {
+    fn start_loop<F>(&mut self, mut update: F, run: &RenderingState) where F: FnMut(&mut HeadlessRenderer) {
         info!("Starting main loop");
         info!("Rom: {}", self.rom_path);
         loop {
-            update();
+            update(self);
             if run.state == "stop" {
                 break;
             }
         };
     }
+
+    fn render_screen(&mut self, ppu: &mut PPU) {}
 }

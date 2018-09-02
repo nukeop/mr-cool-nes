@@ -85,28 +85,11 @@ impl SDLRenderer {
 
     pub fn draw_title(&mut self) {
         self.draw_text(&("Mr. Cool NES".to_owned()), 0, 0);
-    }
-
-    pub fn draw_screen(&mut self, ppu: &PPU) {
-        let creator = self.canvas.texture_creator();
-        let mut texture = creator.create_texture_from_surface(self.emu_screen.as_ref()).unwrap();
-        texture.update(None, &ppu.screen, SCREEN_WIDTH as usize * 3).unwrap();
-
-        self.canvas.copy(
-            &texture,
-            Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT),
-            Rect::new(
-                0,
-                EMULATOR_FRAME_HEIGHT as i32,
-                SCREEN_WIDTH * self.screen_size as u32,
-                SCREEN_HEIGHT * self.screen_size as u32
-            )
-        ).unwrap();
-    }
+    } 
 }
 
-impl Renderer for SDLRenderer {
-    fn start_loop<F>(&mut self, ppu: &PPU, mut update: F, run: &RenderingState) where F: FnMut() -> () {
+impl Renderer<SDLRenderer> for SDLRenderer {
+    fn start_loop<F>(&mut self, mut update: F, run: &RenderingState) where F: FnMut(&mut SDLRenderer) {
         info!("Starting render loop");
         let rom_name = self.rom_path.to_owned();
         let rom_name_path = Path::new(&rom_name);
@@ -120,13 +103,12 @@ impl Renderer for SDLRenderer {
         let mut event_pump = self.context.event_pump().unwrap();
         'running: loop {
             // Update
-            update();
+            update(self);
 
             // Draw
             self.canvas.clear();
             self.draw_title();
             self.draw_text(&("ROM: ".to_owned() + &rom_filename), 0, 16);
-            self.draw_screen(ppu);
             
             for event in event_pump.poll_iter() {
                 match event {
@@ -140,5 +122,22 @@ impl Renderer for SDLRenderer {
             }
             self.canvas.present();
         }
+    }
+
+    fn render_screen(&mut self, ppu: &mut PPU) {
+        let creator = self.canvas.texture_creator();
+        let mut texture = creator.create_texture_from_surface(self.emu_screen.as_ref()).unwrap();
+        texture.update(None, &ppu.get_screen(), SCREEN_WIDTH as usize * 3).unwrap();
+
+        self.canvas.copy(
+            &texture,
+            Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT),
+            Rect::new(
+                0,
+                EMULATOR_FRAME_HEIGHT as i32,
+                SCREEN_WIDTH * self.screen_size as u32,
+                SCREEN_HEIGHT * self.screen_size as u32
+            )
+        ).unwrap();
     }
 }

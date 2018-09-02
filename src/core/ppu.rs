@@ -1,5 +1,8 @@
 use core::memory::Memory;
 
+const SCREEN_WIDTH: usize = 256;
+const SCREEN_HEIGHT: usize = 240;
+
 #[derive(Clone, Copy)]
 pub struct Registers {
     pub ppu_ctrl: u8,      // $2000
@@ -40,12 +43,11 @@ pub struct OAM {
     pub oam: [u8; 0x100]
 }
 
-#[derive(Clone, Copy)]
 pub struct PPU {
     pub regs: Registers,
     pub vram: VRAM,
     pub oam: OAM,
-    pub screen: [u8; 184320]
+    pub screen: Box<[u8; 184320]>
 }
 
 impl PPU {
@@ -60,8 +62,18 @@ impl PPU {
             oam: OAM{
                 oam: [0; 0x100]
             },
-            screen: [0; 184320]
+            screen: Box::new([0x00; 184320])
         }
+    }
+
+    pub fn get_screen(&mut self) -> [u8; 184320] {
+        *self.screen
+    }
+    
+    pub fn put_pixel(&mut self, x: usize, y: usize, color: Pixel) {
+        self.screen[(y * SCREEN_WIDTH + x) * 3 + 0] = color.r;
+        self.screen[(y * SCREEN_WIDTH + x) * 3 + 1] = color.g;
+        self.screen[(y * SCREEN_WIDTH + x) * 3 + 2] = color.b;
     }
 }
 
@@ -94,4 +106,11 @@ impl Memory for PPU {
             _ => panic!("Invalid memory address written to on PPU")
         }
     }
+}
+
+
+pub struct Pixel {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8
 }

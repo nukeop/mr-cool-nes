@@ -72,13 +72,13 @@ impl fmt::Display for Registers {
     }
 }
 
-pub struct CPU {
+pub struct CPU<'a> {
     pub regs: Registers,
-    pub mem_map: CPUMemoryMap
+    pub mem_map: CPUMemoryMap<'a>
 }
 
-impl CPU {
-    pub fn new(ppu: PPU, ram: RAM, mapper: Box<Mapper>) -> CPU {
+impl<'a> CPU<'a> {
+    pub fn new(ppu: &mut PPU, ram: RAM, mapper: Box<Mapper>) -> CPU {
         info!("Creating a CPU...");
         CPU {
             regs: Registers::new(),
@@ -696,7 +696,7 @@ impl CPU {
     }
 }
 
-impl Memory for CPU {
+impl<'a> Memory for CPU<'a> {
     fn load_byte(&mut self, addr: u16) -> u8 {
         self.mem_map.load_byte(addr)
     }

@@ -48,14 +48,14 @@ impl Memory for RAM {
     }
 }
 
-pub struct CPUMemoryMap {
+pub struct CPUMemoryMap<'a> {
     pub ram: RAM,
-    pub ppu: PPU,
+    pub ppu: &'a mut PPU,
     pub mapper: Box<Mapper>
 }
 
-impl CPUMemoryMap {
-    pub fn new(ppu: PPU, ram: RAM, mapper: Box<Mapper>) -> CPUMemoryMap {
+impl<'a> CPUMemoryMap<'a> {
+    pub fn new(ppu: &mut PPU, ram: RAM, mapper: Box<Mapper>) -> CPUMemoryMap {
         CPUMemoryMap {
             ram,
             ppu,
@@ -64,7 +64,7 @@ impl CPUMemoryMap {
     }
 }
 
-impl Memory for CPUMemoryMap {
+impl<'a> Memory for CPUMemoryMap<'a> {
     fn load_byte(&mut self, addr: u16) -> u8 {
         if addr < 0x2000 {
             self.ram.load_byte(addr)

@@ -4,6 +4,8 @@ pub struct RenderingState<'a> {
     pub state: &'a str
 }
 
-pub trait Renderer {
-    fn start_loop<F>(&mut self, ppu: &PPU, mut update: F, state: &RenderingState) where F: FnMut() -> ();
+pub trait Renderer<R> {
+    fn start_loop<F>(&mut self, mut update: F, state: &RenderingState) where F: FnMut(&mut R) {}
+
+    fn render_screen(&mut self, ppu: &mut PPU) {}
 }

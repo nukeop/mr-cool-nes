@@ -2,42 +2,32 @@ use core::cpu;
 use core::memory;
 use core::ppu;
 
-pub struct NES {
-    pub cpu: cpu::CPU,
-    pub ppu: ppu::PPU
+pub struct NES<'a> {
+    pub cpu: cpu::CPU<'a>
 }
 
-pub struct NESBuilder {
-    cpu: Option<cpu::CPU>,
-    ppu: Option<ppu::PPU>
+pub struct NESBuilder<'a> {
+    cpu: Option<cpu::CPU<'a>>
 }
 
-impl NESBuilder {
-    pub fn new() -> NESBuilder {
-        let ppu = None;
+impl<'a> NESBuilder<'a> {
+    pub fn new() -> NESBuilder<'a> {
         let cpu = None;
         
         NESBuilder {
-            cpu: cpu,
-            ppu: ppu
+            cpu: cpu
         }
     }
 
-    pub fn cpu(mut self, cpu: cpu::CPU) -> NESBuilder {
+    pub fn cpu(mut self, cpu: cpu::CPU<'a>) -> NESBuilder<'a> {
         self.cpu = Some(cpu);
         self
     }
 
-    pub fn ppu(mut self, ppu: ppu::PPU) -> NESBuilder {
-        self.ppu = Some(ppu);
-        self
-    }
-
-    pub fn finalize(self) -> NES {
+    pub fn finalize(self) -> NES<'a> {
         info!("Creating a NES...");
         NES {
-            cpu: self.cpu.unwrap(),
-            ppu: self.ppu.unwrap()
+            cpu: self.cpu.unwrap()
         }
     }
 }

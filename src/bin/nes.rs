@@ -4,7 +4,7 @@ extern crate pretty_env_logger;
 
 extern crate mr_cool_nes;
 
-use mr_cool_nes::init::{read_cl_args, start};
+use mr_cool_nes::init::{read_cl_args, start, start_headless};
 use mr_cool_nes::emu_config::EmuConfig;
 use mr_cool_nes::renderer::Renderer;
 use mr_cool_nes::sdl_renderer::SDLRenderer;
@@ -28,7 +28,7 @@ fn main() {
 
     if(headless) {
         let headless_renderer = Box::new(HeadlessRenderer::new(&rom_path));
-        start(rom, config, &rom_path, headless_renderer)
+        start_headless(rom, config, &rom_path, headless_renderer)
     } else {
         let sdl_renderer = Box::new(SDLRenderer::new(&config, &rom_path));
         start(rom, config, &rom_path, sdl_renderer);       
