@@ -47,7 +47,7 @@ pub struct PPU {
     pub regs: Registers,
     pub vram: VRAM,
     pub oam: OAM,
-    pub screen: Box<[u8; 184320]>
+    pub screen: Box<[u8; SCREEN_WIDTH*SCREEN_HEIGHT*3]>
 }
 
 impl PPU {
@@ -62,11 +62,11 @@ impl PPU {
             oam: OAM{
                 oam: [0; 0x100]
             },
-            screen: Box::new([0x00; 184320])
+            screen: Box::new([0x00; SCREEN_WIDTH*SCREEN_HEIGHT*3])
         }
     }
 
-    pub fn get_screen(&mut self) -> [u8; 184320] {
+    pub fn get_screen(&mut self) -> [u8; SCREEN_WIDTH*SCREEN_HEIGHT*3] {
         *self.screen
     }
     

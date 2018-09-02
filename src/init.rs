@@ -47,7 +47,9 @@ pub fn start<R: Renderer<SDLRenderer>>(rom: core::rom::Rom, config: EmuConfig, r
 
     renderer.start_loop(|r: &mut SDLRenderer| {
         nes.cpu.step();
-        nes.cpu.mem_map.ppu.put_pixel(10, 10, Pixel{r: 0xFF, g: 0x00, b: 0x00});
+        nes.cpu.mem_map.ppu.put_pixel(10, 10, Pixel{r: 0xFF, g: 0xFF, b: 0xFF});
+        nes.cpu.mem_map.ppu.put_pixel(11, 10, Pixel{r: 0xFF, g: 0x00, b: 0x00});
+        nes.cpu.mem_map.ppu.put_pixel(12, 10, Pixel{r: 0xFF, g: 0x00, b: 0x00});
         r.render_screen(&mut nes.cpu.mem_map.ppu);
         
     }, &RenderingState{state: "run"});

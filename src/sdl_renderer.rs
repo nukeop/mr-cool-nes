@@ -102,13 +102,13 @@ impl Renderer<SDLRenderer> for SDLRenderer {
         
         let mut event_pump = self.context.event_pump().unwrap();
         'running: loop {
-            // Update
-            update(self);
-
             // Draw
             self.canvas.clear();
             self.draw_title();
             self.draw_text(&("ROM: ".to_owned() + &rom_filename), 0, 16);
+
+            //Update
+            update(self);
             
             for event in event_pump.poll_iter() {
                 match event {
@@ -127,7 +127,9 @@ impl Renderer<SDLRenderer> for SDLRenderer {
     fn render_screen(&mut self, ppu: &mut PPU) {
         let creator = self.canvas.texture_creator();
         let mut texture = creator.create_texture_from_surface(self.emu_screen.as_ref()).unwrap();
-        texture.update(None, &ppu.get_screen(), SCREEN_WIDTH as usize * 3).unwrap();
+        let screen = ppu.get_screen();
+        
+        texture.update(None, &screen, SCREEN_WIDTH as usize * 3).unwrap();
 
         self.canvas.copy(
             &texture,
