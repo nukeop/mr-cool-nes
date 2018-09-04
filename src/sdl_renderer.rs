@@ -51,8 +51,8 @@ impl SDLRenderer {
         canvas.present();        
 
         let font = SDLRenderer::create_font_surface(Path::new(&config.font_path));
-        let emu_frame = Surface::new(SCREEN_WIDTH, EMULATOR_FRAME_HEIGHT, PixelFormatEnum::RGB24).unwrap();
-        let emu_screen = Surface::new(SCREEN_WIDTH, SCREEN_HEIGHT, PixelFormatEnum::RGB24).unwrap();
+        let emu_frame = Surface::new(SCREEN_WIDTH, EMULATOR_FRAME_HEIGHT, PixelFormatEnum::BGR24).unwrap();
+        let emu_screen = Surface::new(SCREEN_WIDTH, SCREEN_HEIGHT, PixelFormatEnum::BGR24).unwrap();
         
         SDLRenderer {
             rom_path: rom_path.to_owned(),
@@ -126,14 +126,14 @@ impl Renderer<SDLRenderer> for SDLRenderer {
 
     fn render_screen(&mut self, ppu: &mut PPU) {
         let creator = self.canvas.texture_creator();
-        let mut texture = creator.create_texture_from_surface(self.emu_screen.as_ref()).unwrap();
+        let mut texture = creator.create_texture_streaming(PixelFormatEnum::BGR24, SCREEN_WIDTH, SCREEN_HEIGHT).unwrap();
         let screen = ppu.get_screen();
         
         texture.update(None, &screen, SCREEN_WIDTH as usize * 3).unwrap();
-
+        
         self.canvas.copy(
             &texture,
-            Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT),
+            None,
             Rect::new(
                 0,
                 EMULATOR_FRAME_HEIGHT as i32,
