@@ -15,22 +15,26 @@ mod integration_tests {
 
     static mut RENDERING_STATE: RenderingState = RenderingState{state: "test"};
 
-    fn setup_emulator(rom_path: &String) -> nes::NES {
+    fn setup_ppu() -> ppu::PPU {
+        ppu::PPU::new()
+    }
+    
+    fn setup_emulator<'a>(rom_path: &String, ppu: &'a mut ppu::PPU) -> nes::NES<'a> {
         let rom = rom::Rom::load(rom_path).unwrap();
         let mapper = Box::new(mapper::TestMapper::new(rom));
-        let ppu = ppu::PPU::new();
         let ram = memory::RAM::new();
         let cpu = cpu::CPU::new(ppu, ram, mapper);
 
         nes::NESBuilder::new()
-            .ppu(ppu)
             .cpu(cpu)
             .finalize()
     }
 
     fn run_integration_test(rom_name: &str, rom_path: &str, error_lower: u8, error_upper: u8) {
         println!("\nRunning test: {}", rom_name);
-        let mut nes = setup_emulator(&rom_path.to_owned());
+        let my_rom_path = &rom_path.to_owned();
+        let mut ppu = setup_ppu();
+        let mut nes = setup_emulator(my_rom_path, &mut ppu);
 
         nes.cpu.reset();
         
@@ -40,7 +44,7 @@ mod integration_tests {
         unsafe {
             RENDERING_STATE.state = "test";
             
-            renderer.start_loop(|| {
+            renderer.start_loop(|r: &mut headless_renderer::HeadlessRenderer| {
 
                 nes.cpu.step();
                 
@@ -74,13 +78,14 @@ mod integration_tests {
     #[test]
     #[ignore]
     fn ram_after_reset() {
-        let rom_path = "tests/roms/ram/ram_after_reset.nes".to_owned();
-        let mut nes = setup_emulator(&rom_path);
+        let rom_path = &"tests/roms/ram/ram_after_reset.nes".to_owned();
+        let mut ppu = setup_ppu();
+        let mut nes = setup_emulator(&rom_path, &mut ppu);
 
         nes.cpu.reset();
 
         let mut renderer = Box::new(headless_renderer::HeadlessRenderer::new(&rom_path));
-        unsafe { renderer.start_loop(|| nes.cpu.step(), &RENDERING_STATE); }
+        unsafe { renderer.start_loop(|r: &mut headless_renderer::HeadlessRenderer| nes.cpu.step(), &RENDERING_STATE); }
     }
 
     #[test]    
@@ -103,4 +108,15 @@ mod integration_tests {
             0x75
         );
     }
+
+    #[test]
+    fn cpu_instr_zeropage() {
+        run_integration_test(
+            "03-zero_page.nes",
+            "tests/roms/cpu_instructions/02-immediate.nes",
+            0x18,
+            0x75
+        );
+    }
+
 }

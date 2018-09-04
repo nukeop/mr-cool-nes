@@ -25,18 +25,22 @@ mod cpu_tests {
             chr_rom: vec![0; 16384]
         }
     }
+
+    fn setup_ppu() -> PPU {
+        PPU::new()
+    }
     
-    fn setup_cpu() -> CPU {
+    fn setup_cpu<'a>(ppu: &'a mut PPU) -> CPU<'a> {
         let rom = setup_rom();        
         let ram = RAM::new();
-        let ppu = PPU::new();
         let mapper = NROM::new(rom);
         CPU::new(ppu, ram, Box::new(mapper))
     }
 
     #[test]
     fn load_byte_ram() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.mem_map.ram.mem[0xFF] = 0xDD;
         let byte = cpu.load_byte(0xFF);
         assert_eq!(byte, 0xDD);
@@ -44,21 +48,24 @@ mod cpu_tests {
 
     #[test]
     fn store_byte_ram() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.store_byte(0x0, 0xDD);
         assert_eq!(cpu.mem_map.ram.mem[0x0], 0xDD);
     }
 
     #[test]
     fn store_byte_vram() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.store_byte(0x2000, 0xDD);
         assert_eq!(cpu.mem_map.ppu.regs.ppu_ctrl, 0xDD);
     }
 
     #[test]
     fn store_byte_dma() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         let final_addr = ((0x0 as u16) << 8) + 256;
         cpu.store_byte(final_addr, 0xDD);
         cpu.store_byte(0x4014, 0x0);
@@ -67,7 +74,8 @@ mod cpu_tests {
 
     #[test]
     fn push_byte_on_stack() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.push_byte(0xDD);
         assert_eq!(cpu.regs.s, 0xFC);
         assert_eq!(cpu.mem_map.ram.mem[(0x100 + (cpu.regs.s + 1) as u16) as usize], 0xDD);
@@ -75,7 +83,8 @@ mod cpu_tests {
 
     #[test]
     fn push_word_on_stack() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.push_word(0xCCDD);
         assert_eq!(cpu.regs.s, 0xFB);
         assert_eq!(cpu.mem_map.ram.mem[(0x100 + (cpu.regs.s + 1) as u16) as usize], 0xDD);
@@ -84,7 +93,8 @@ mod cpu_tests {
 
     #[test]
     fn pop_byte_from_stack() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.regs.s = 0xFC;
         cpu.mem_map.ram.mem[0x100 + 0xFD] = 0xDE;
         let val = cpu.pop_byte();
@@ -95,7 +105,8 @@ mod cpu_tests {
 
     #[test]
     fn pop_word_from_stack() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.regs.s = 0xFC;
         cpu.mem_map.ram.mem[0x100 + 0xFE] = 0xDE;
         cpu.mem_map.ram.mem[0x100 + 0xFD] = 0xAD;
@@ -107,56 +118,64 @@ mod cpu_tests {
 
     #[test]
     fn reset() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.reset();
         assert_eq!(cpu.regs.pc, 0x0000);
     }
 
     #[test]
     fn set_flag_carry() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_flag(F_CARRY, true);
         assert_eq!(cpu.regs.p & 0x01, 1);
     }
 
     #[test]
     fn set_flag_interrupt() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_flag(F_INTERRUPT, true);
         assert_eq!(cpu.regs.p & 0x04, 0x04);
     }
 
     #[test]
     fn set_flag_decimal() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_flag(F_DECIMAL, true);
         assert_eq!(cpu.regs.p & 0x08, 0x08);
     }
 
     #[test]
     fn set_flag_break() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_flag(F_BREAK, true);
         assert_eq!(cpu.regs.p & 0x10, 0x10);
     }
 
     #[test]
     fn set_flag_overflow() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_flag(F_OVERFLOW, true);
         assert_eq!(cpu.regs.p & 0x40, 0x40);
     }
 
     #[test]
     fn set_flag_negative() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_flag(F_NEGATIVE, true);
         assert_eq!(cpu.regs.p & 0x80, 0x80);
     }
 
     #[test]
     fn load_byte_increment_pc() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         let pc = cpu.regs.pc;
         cpu.mem_map.ram.mem[pc as usize] = 0xDD;
         let byte = cpu.load_byte_increment_pc();
@@ -166,7 +185,8 @@ mod cpu_tests {
 
     #[test]
     fn load_word_increment_pc() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         let pc = cpu.regs.pc;
         cpu.mem_map.ram.mem[pc as usize] = 0xAD;
         cpu.mem_map.ram.mem[(pc+1) as usize] = 0xDE;
@@ -177,7 +197,8 @@ mod cpu_tests {
 
     #[test]
     fn set_zn_zero() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_zn(0);
         assert_eq!(cpu.regs.p & 0x02, 0x02);
         assert_eq!(cpu.regs.p & 0x80, 0);
@@ -185,7 +206,8 @@ mod cpu_tests {
 
     #[test]
     fn set_zn_nonzero() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_zn(0x40);
         assert_eq!(cpu.regs.p & 0x02, 0);
         assert_eq!(cpu.regs.p & 0x80, 0);
@@ -193,7 +215,8 @@ mod cpu_tests {
 
     #[test]
     fn set_zn_negative() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.set_zn(0xA0);
         assert_eq!(cpu.regs.p & 0x02, 0);
         assert_eq!(cpu.regs.p & 0x80, 0x80);
@@ -204,13 +227,13 @@ mod cpu_tests {
         let mut rom = setup_rom();
         
         let ram = RAM::new();
-        let ppu = PPU::new();
+        let mut ppu = setup_ppu();
         
         rom.prg_rom[0xFFFC & 0x3FFF] = 0xAD;
         rom.prg_rom[(0xFFFC + 1 )& 0x3FFF] = 0xDE;
 
         let mapper = NROM::new(rom);
-        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        let mut cpu = CPU::new(&mut ppu, ram, Box::new(mapper));
         
         cpu.reset();
         assert_eq!(cpu.regs.pc, 0xDEAD);
@@ -221,13 +244,13 @@ mod cpu_tests {
         let mut rom = setup_rom();
 
         let mut ram = RAM::new();
-        let ppu = PPU::new();
+        let mut ppu = PPU::new();
         
         rom.prg_rom[0xFFFC & 0x3FFF] = 0x00;
         ram.mem[0x00] = 0x10;
 
         let mapper = NROM::new(rom);
-        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        let mut cpu = CPU::new(&mut ppu, ram, Box::new(mapper));
         cpu.regs.a = 0x00;
         
         cpu.reset();
@@ -243,13 +266,13 @@ mod cpu_tests {
         let mut rom = setup_rom();
 
         let mut ram = RAM::new();
-        let ppu = PPU::new();
+        let mut ppu = PPU::new();
         
         rom.prg_rom[0xFFFC & 0x3FFF] = 0x00;
         ram.mem[0x00] = 0x10;
 
         let mapper = NROM::new(rom);
-        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        let mut cpu = CPU::new(&mut ppu, ram, Box::new(mapper));
         cpu.regs.a = 0x20;
         
         cpu.reset();
@@ -265,13 +288,13 @@ mod cpu_tests {
         let mut rom = setup_rom();
 
         let mut ram = RAM::new();
-        let ppu = PPU::new();
+        let mut ppu = PPU::new();
         
         rom.prg_rom[0xFFFC & 0x3FFF] = 0x00;
         ram.mem[0x00] = 0x10;
 
         let mapper = NROM::new(rom);
-        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        let mut cpu = CPU::new(&mut ppu, ram, Box::new(mapper));
         cpu.regs.a = 0x10;
         
         cpu.reset();
@@ -286,12 +309,12 @@ mod cpu_tests {
     fn branch_go() {
         let mut rom = setup_rom();
         let ram = RAM::new();
-        let ppu = PPU::new();
+        let mut ppu = PPU::new();
         
         rom.prg_rom[0xFF00 & 0x3FFF] = 0x04;
 
         let mapper = NROM::new(rom);
-        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        let mut cpu = CPU::new(&mut ppu, ram, Box::new(mapper));
         cpu.reset();
         cpu.regs.pc = 0xFF00;
 
@@ -303,12 +326,12 @@ mod cpu_tests {
     fn branch_dont_go() {
         let mut rom = setup_rom();
         let ram = RAM::new();
-        let ppu = PPU::new();
+        let mut ppu = setup_ppu();
         
         rom.prg_rom[0xFF00 & 0x3FFF] = 0x04;
 
         let mapper = NROM::new(rom);
-        let mut cpu = CPU::new(ppu, ram, Box::new(mapper));
+        let mut cpu = CPU::new(&mut ppu, ram, Box::new(mapper));
         cpu.reset();
         cpu.regs.pc = 0xFF00;
 
@@ -318,7 +341,8 @@ mod cpu_tests {
 
     #[test]
     fn sta() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.regs.pc = 0x100;
         cpu.mem_map.ram.mem[0x100] = 0xAA;
         cpu.mem_map.ram.mem[0x101] = 0x01;
@@ -330,7 +354,8 @@ mod cpu_tests {
 
     #[test]
     fn stx() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.regs.pc = 0x100;
         cpu.mem_map.ram.mem[0x100] = 0xAA;
         cpu.mem_map.ram.mem[0x101] = 0x01;
@@ -342,7 +367,8 @@ mod cpu_tests {
 
     #[test]
     fn sty() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.regs.pc = 0x100;
         cpu.mem_map.ram.mem[0x100] = 0xAA;
         cpu.mem_map.ram.mem[0x101] = 0x01;
@@ -354,7 +380,8 @@ mod cpu_tests {
 
     #[test]
     fn inc() {
-        let mut cpu = setup_cpu();
+        let mut ppu = setup_ppu();
+        let mut cpu = setup_cpu(&mut ppu);
         cpu.regs.pc = 0x100;
         cpu.mem_map.ram.mem[0xAA] = 0x09;
         cpu.mem_map.ram.mem[0x100] = 0xAA;

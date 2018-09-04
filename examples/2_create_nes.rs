@@ -11,11 +11,10 @@ use mr_cool_nes::core::nes::NESBuilder;
 fn main() {
     let rom = Rom::load(&"tests/roms/cpu_dummy_reads/cpu_dummy_reads.nes".to_owned()).unwrap();
     let mapper = select_mapper(rom);
-    let ppu = PPU::new();
+    let mut ppu = PPU::new();
     let ram = RAM::new();
-    let cpu = CPU::new(ppu, ram, mapper);
+    let cpu = CPU::new(&mut ppu, ram, mapper);
     let _nes = NESBuilder::new()
-        .ppu(ppu)
         .cpu(cpu)
         .finalize();
 }
